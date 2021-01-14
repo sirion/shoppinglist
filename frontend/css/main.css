@@ -1,0 +1,167 @@
+
+@media (hover: hover) {
+	:root {
+		--item-height: 24px;
+		font-size: 16px;
+	}
+}
+@media (hover: none) and (orientation: landscape) {
+	:root {
+		--item-height: 24px;
+		font-size: 16px;
+	}
+}
+@media (hover: none) and (orientation: portrait) {
+	:root {
+		--item-height: 24px;
+		font-size: 16px;
+	}
+}
+
+
+
+/***** General Page *****/
+
+html, body {
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+}
+
+body {
+	position: absolute;
+	top: 0;
+	left: 0;
+	bottom: 0;
+	right: 0;
+	overflow: auto;
+	background-color: #555;
+}
+
+.list {
+	display: grid;
+	/* grid-template-columns:                  category            amountNum           amountUnit   name               button; */
+	grid-template-columns: calc(var(--item-height) * 3)   var(--item-height)   var(--item-height)   auto;   /* calc(var(--item-height) * 1.25) */;
+	grid-auto-rows: calc(var(--item-height) * 1.5);
+	row-gap: calc(var(--item-height) / 3);
+	column-gap: calc(var(--item-height) / 4);
+	align-items: center;
+	user-select: none;
+}
+
+.list > div {
+	align-items: center;
+
+	cursor: pointer;
+}
+
+
+/***** Items *****/
+
+.category {
+	border: 5px solid transparent;
+	border-color: rgba(255, 255, 255, 0.25);
+	border-radius: calc(var(--item-height) / 3 * 2);
+	white-space: nowrap;
+	margin-left: calc(var(--item-height) * 0.25);
+}
+
+.category > div {
+	height: inherit;
+	background: inherit;
+	-webkit-background-clip: text;
+	background-clip: text;
+	color: transparent;
+	text-align: center;
+	filter: invert(1) grayscale(1) contrast(9) drop-shadow(0.5px 0.5px grey);
+}
+
+
+.amountNum {
+	font-family: monospace;
+	font-size: 0.8em;
+	justify-self: right;
+}
+
+.amountUnit {
+	justify-self: left;
+}
+
+.name {
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	overflow: hidden;
+	width: 99%;
+}
+
+.action {
+	margin-right: calc(var(--item-height) / 2);
+}
+
+.action > button {
+	position: relative;
+	width: var(--item-height);
+	height: var(--item-height);
+	border: 0px solid transparent;
+	cursor: pointer;
+	background-color: black;
+	border-radius: 50%;
+	overflow: hidden;
+}
+
+
+/***** Active List *****/
+
+.active .action > button::after {
+	content: "";
+	position: absolute;
+	top: 0;
+	left: 0;
+	transform: scale(0.7);
+	width: var(--item-height);
+	height: var(--item-height);
+	display: block;
+	background-color: red;
+	filter: blur(12px);
+	clip-path: polygon(10% 0, 0 10%, 40% 50%, 0 90%, 10% 100%, 50% 60%, 90% 100%, 100% 90%, 59% 50%, 100% 10%, 90% 0, 50% 40%);
+	/* polygon(20% 0%, 0% 20%, 30% 50%, 0% 80%, 20% 100%, 50% 70%, 80% 100%, 100% 80%, 70% 50%, 100% 20%, 80% 0%, 50% 30%); Fat /**/
+	/* polygon(10% 0, 0 10%, 40% 50%, 0 90%, 10% 100%, 50% 60%, 90% 100%, 100% 90%, 59% 50%, 100% 10%, 90% 0, 50% 40%); Slim /**/
+	/* polygon(15% 0, 0 15%, 40% 50%, 0 85%, 15% 100%, 50% 60%, 85% 99%, 100% 85%, 59% 50%, 100% 15%, 85% 0, 50% 40%); Strange /**/
+}
+
+
+.active {
+	background: white;
+	padding-bottom: var(--item-height);
+}
+
+
+/***** Inactive List *****/
+
+.inactive {
+	/* background: linear-gradient(0, #5555, #555 20%, #555); */
+	background-color: transparent;
+	color: #fff;
+	padding-top: var(--item-height);
+	padding-bottom: var(--item-height);
+}
+
+.inactive > * {
+	opacity: 0.5;
+}
+
+/***** Menu and Controls *****/
+
+.controls {
+	position: absolute;
+	width: 10vmin;
+	height: 10vmin;
+	right: 5vmin;
+	bottom: 5vmin;
+
+	border: 1px dashed black;
+}
+
+.controls.open {
+	height: 30vmin;
+}

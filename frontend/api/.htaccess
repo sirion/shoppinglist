@@ -1,0 +1,18 @@
+Order Deny,Allow
+# Deny from all
+Allow from all
+
+RewriteEngine On
+#RewriteLog "/home/www/sirion/rewrite.log"
+#RewriteLogLevel 3
+# LogLevel alert rewrite:trace3
+
+
+# If the requested URL exists (is file or directory), skip rewriting.
+RewriteCond %{REQUEST_FILENAME} -f
+# [OR]
+# RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule .* - [L]
+
+
+RewriteRule ^(.*)$             index.php?action=$1                          [QSA,L]

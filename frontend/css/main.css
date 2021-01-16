@@ -2,19 +2,16 @@
 @media (hover: hover) {
 	:root {
 		--item-height: 24px;
-		font-size: 16px;
 	}
 }
 @media (hover: none) and (orientation: landscape) {
 	:root {
 		--item-height: 24px;
-		font-size: 16px;
 	}
 }
 @media (hover: none) and (orientation: portrait) {
 	:root {
 		--item-height: 24px;
-		font-size: 16px;
 	}
 }
 
@@ -26,6 +23,7 @@ html, body {
 	box-sizing: border-box;
 	margin: 0;
 	padding: 0;
+	font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
 }
 
 body {
@@ -41,7 +39,7 @@ body {
 .list {
 	display: grid;
 	/* grid-template-columns:                  category            amountNum           amountUnit   name               button; */
-	grid-template-columns: calc(var(--item-height) * 3)   var(--item-height)   var(--item-height)   auto;   /* calc(var(--item-height) * 1.25) */;
+	grid-template-columns: calc(var(--item-height) * 5)   var(--item-height)   var(--item-height)   auto;   /* calc(var(--item-height) * 1.25) */;
 	grid-auto-rows: calc(var(--item-height) * 1.5);
 	row-gap: calc(var(--item-height) / 3);
 	column-gap: calc(var(--item-height) / 4);
@@ -64,6 +62,7 @@ body {
 	border-radius: calc(var(--item-height) / 3 * 2);
 	white-space: nowrap;
 	margin-left: calc(var(--item-height) * 0.25);
+	margin-right: calc(var(--item-height) * 0.5);
 }
 
 .category > div {
@@ -78,8 +77,8 @@ body {
 
 
 .amountNum {
-	font-family: monospace;
-	font-size: 0.8em;
+	/* font-family: monospace;
+	font-size: 0.8em; */
 	justify-self: right;
 }
 
@@ -156,10 +155,19 @@ body {
 	position: absolute;
 	width: 10vmin;
 	height: 10vmin;
-	right: 5vmin;
-	bottom: 5vmin;
+	right: 2vmin;
+	bottom: 2vmin;
 
-	border: 1px dashed black;
+	border: 0px dashed black;
+}
+
+.controls > svg {
+	background-color: #fff4;
+	border-radius: 60%;
+	stroke: #eee;
+	stroke-width: 5px;
+	stroke-linecap: round;
+	box-shadow: #444 3px 3px 7px;
 }
 
 .controls.open {

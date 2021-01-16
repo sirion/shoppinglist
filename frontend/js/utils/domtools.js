@@ -52,7 +52,7 @@ class DOMTools {
 	static createElement(type, attributes, namespace) {
 		var el;
 
-		if (namespace === undefined) {
+		if (!namespace) {
 			if (type.toLowerCase() === "svg") {
 				namespace = "http://www.w3.org/2000/svg";
 			} else {
@@ -69,6 +69,9 @@ class DOMTools {
 		// Short syntax: string conly creates an element with textContent
 		if (typeof(attributes) === "string") {
 			el.textContent = attributes;
+			return el;
+		} else if (attributes instanceof Node) {
+			el.append(attributes);
 			return el;
 		}
 
@@ -102,6 +105,10 @@ class DOMTools {
 				// Attribute
 				if (name.indexOf("xlink:") === 0) {
 					el.setAttributeNS("http://www.w3.org/1999/xlink", name, attributes[name]);
+				} else if (typeof attributes[name] === "boolean") {
+					if (attributes[name]) {
+						el.setAttribute(name, "");
+					}
 				} else {
 					el.setAttribute(name, attributes[name]);
 				}

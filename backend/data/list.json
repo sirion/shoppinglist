@@ -1,1 +1,44 @@
-{"main":{"active":[{"category":"Getr\u00e4nke","color":"blue","name":"Alpro Soja Vanille","amount":{"number":3,"unit":""}}],"inactive":[{"category":"Gem\u00fcse","color":"green","name":"Lauch","amount":{"number":2,"unit":""}},{"category":"Haushalt","color":"#9df","name":"M\u00fcllbeutel (25l)","amount":{"number":1,"unit":""}},{"category":"S\u00fc\u00dfkram","color":"yellow","name":"Schokolade","amount":{"number":500,"unit":"g"}}]}}
+{
+	"main": {
+		"active": [
+			{
+				"category": "Getr\u00e4nke",
+				"name": "Alpro Soja Vanille",
+				"number": 3,
+				"unit": ""
+			},
+			{
+				"category": "Getr\u00e4nke",
+				"name": "Apfelsaft",
+				"number": 2,
+				"unit": ""
+			},
+			{
+				"category": "Gem\u00fcse",
+				"name": "Lauch",
+				"number": 1,
+				"unit": ""
+			}
+		],
+		"inactive": [
+			{
+				"category": "Haushalt",
+				"name": "M\u00fcllbeutel (25l)",
+				"number": 1,
+				"unit": ""
+			},
+			{
+				"category": "S\u00fc\u00dfkram",
+				"name": "Schokolade",
+				"number": 500,
+				"unit": "g"
+			},
+			{
+				"category": "Getr\u00e4nke",
+				"name": "Alpro Soja Schokolade",
+				"number": 1,
+				"unit": ""
+			}
+		]
+	}
+}

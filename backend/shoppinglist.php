@@ -39,10 +39,10 @@ class Shoppinglist {
 	private $lists = [
 		"main" => [
 			"active" => [
-				// [ "category" => "abc", "color" => "#000", "name" => "abc", "amount" => [ "number" => 100, "unit" => "g" ] ],
+				// [ "category" => "abc", "name" => "abc", "number" => 100, "unit" => "g" ],
 			],
 			"inactive" => [
-				// [ "category" => "abc", "color" => "#000", "name" => "abc", "amount" => [ "number" => 100, "unit" => "g" ] ],
+				// [ "category" => "abc", "name" => "abc", "number" => 100, "unit" => "g" ],
 			]
 		]
 	];
@@ -65,20 +65,20 @@ class Shoppinglist {
 		}
 		if (!isset($this->lists["main"]["active"])) {
 			$this->lists["main"]["active"] = [
-				// [ "category" => "1", "color" => "#000", "name" => "abc", "amount" => [ "number" => 100, "unit" => "g" ] ],
-				// [ "category" => "2", "color" => "#333", "name" => "abc", "amount" => [ "number" => 723, "unit" => "kg" ] ],
-				// [ "category" => "3", "color" => "#666", "name" => "abc", "amount" => [ "number" => 12, "unit" => "pcs" ] ],
-				// [ "category" => "4", "color" => "#999", "name" => "abc", "amount" => [ "number" => 1, "unit" => "" ] ],
-				// [ "category" => "5", "color" => "#ccc", "name" => "abc", "amount" => [ "number" => 1, "unit" => "" ] ],
-				// [ "category" => "6", "color" => "#fff", "name" => "abc", "amount" => [ "number" => 1, "unit" => "" ] ],
+				// [ "category" => "1", "name" => "abc", "number" => 100, "unit" => "g" ],
+				// [ "category" => "2", "name" => "abc", "number" => 723, "unit" => "kg" ],
+				// [ "category" => "3", "name" => "abc", "number" => 12, "unit" => "pcs" ],
+				// [ "category" => "4", "name" => "abc", "number" => 1, "unit" => "" ],
+				// [ "category" => "5", "name" => "abc", "number" => 1, "unit" => "" ],
+				// [ "category" => "6", "name" => "abc", "number" => 1, "unit" => "" ],
 			];
 		}
 		if (!isset($this->lists["main"]["inactive"])) {
 			$this->lists["main"]["inactive"] = [
-				// [ "category" => "unfug", "color" => "red", "name" => "abc", "amount" => [ "number" => 1, "unit" => "" ] ],
-				// [ "category" => "getränke", "color" => "blue", "name" => "abc", "amount" => [ "number" => 1, "unit" => "" ] ],
-				// [ "category" => "gemüse", "color" => "green", "name" => "abc", "amount" => [ "number" => 1, "unit" => "" ] ],
-				// [ "category" => "süßkram", "color" => "yellow", "name" => "abc abc abc abc abc abc abc abc abc abc abc abc abc abc abc", "amount" => [ "number" => 1, "unit" => "" ] ],
+				// [ "category" => "unfug", "name" => "abc", "number" => 1, "unit" => "" ],
+				// [ "category" => "getränke", "name" => "abc", "number" => 1, "unit" => "" ],
+				// [ "category" => "gemüse", "name" => "abc", "number" => 1, "unit" => "" ],
+				// [ "category" => "süßkram", "name" => "abc abc abc abc abc abc abc abc abc abc abc abc abc abc abc", "number" => 1, "unit" => "" ],
 			];
 		}
 	}
@@ -170,7 +170,9 @@ class Shoppinglist {
 				$listType = array_shift($actions);
 				$entryKey = array_shift($actions);
 
+
 				if ($listType === "active" || $listType === "inactive") {
+					// Switch entry to other list
 					return $this->switchItem($listName, $listType, $entryKey);
 				} else {
 					return $this->error(Errors::Invalid_API);
@@ -181,11 +183,19 @@ class Shoppinglist {
 
 
 		} else if ($_SERVER["REQUEST_METHOD"] === "PUT") {
-			if (count($actions) === 1) {
+			$numParts = count($actions);
+			if ($numParts === 1) {
 				// Create new Item
 				$listName = array_shift($actions);
 				return $this->addItem($listName);
-			} else if (count($actions) === 0) {
+			} else if ($numParts === 3) {
+				$listName = array_shift($actions);
+				$listType = array_shift($actions);
+				$entryKey = array_shift($actions);
+
+				// Edit entry
+				return $this->editItem($listName, $listType, $entryKey, $entry);
+			} else if ($numParts === 0) {
 				// Create new list
 				return $this->error(Errors::NYI_Create_List);
 			} else {
@@ -218,22 +228,11 @@ class Shoppinglist {
 	public function addItem($listname) {
 		$item = $this->getRequestBodyData();
 
-
-
-		if (!$item) {
-			return $this->error(Errors::Invalid_Body, $ex->getMessage());
+		$error = $this->verifyEntry($item);
+		if ($error !== null) {
+			return $error;
 		}
 
-
-		if (empty($item["category"])) {
-			return $this->error(Errors::Invalid_Body, "Missing field: 'cagetory'");
-		}
-		if (empty($item["name"])) {
-			return $this->error(Errors::Invalid_Body, "Missing field: 'name'");
-		}
-		if (empty($item["amount"])) {
-			return $this->error(Errors::Invalid_Body, "Missing field: 'amount'");
-		}
 
 		array_push($this->lists[$listname]["active"], $item);
 		$this->saveList();
@@ -241,9 +240,26 @@ class Shoppinglist {
 		return [ "status" => 204 ];
 	}
 
+	private function verifyEntry($item) {
+
+		if (!$item) {
+			return $this->error(Errors::Invalid_Body, "Invalid Request Body");
+		}
+		if (empty($item["category"])) {
+			return $this->error(Errors::Invalid_Body, "Missing field: 'cagetory'");
+		}
+		if (empty($item["name"])) {
+			return $this->error(Errors::Invalid_Body, "Missing field: 'name'");
+		}
+		if (empty($item["number"])) {
+			return $this->error(Errors::Invalid_Body, "Missing field: 'number'");
+		}
+
+		return null;
+	}
 
 
-	private function checkItemValidity($listname, $listType, $entryKey, $receivedItem) {
+	private function compareItem($listname, $listType, $entryKey, $receivedItem) {
 		if (!isset($this->lists[$listname])) {
 			return $this->error(Errors::Invalid_Delete, "Item Not Found");
 		}
@@ -271,9 +287,9 @@ class Shoppinglist {
 
 	public function removeItem($listname, $listType, $entryKey) {
 		$item = $this->getRequestBodyData();
-		$error = $this->checkItemValidity($listname, $listType, $entryKey, $item);
-		if ($err !== null) {
-			return $err;
+		$error = $this->compareItem($listname, $listType, $entryKey, $item);
+		if ($error !== null) {
+			return $error;
 		}
 
 		$originalItem = $this->lists[$listname][$listType][$entryKey];
@@ -288,7 +304,7 @@ class Shoppinglist {
 
 	public function switchItem($listName, $listType, $entryKey) {
 		$item = $this->getRequestBodyData();
-		$error = $this->checkItemValidity($listName, $listType, $entryKey, $item);
+		$error = $this->compareItem($listName, $listType, $entryKey, $item);
 		if ($error !== null) {
 			return $error;
 		}
@@ -304,6 +320,23 @@ class Shoppinglist {
 			array_push($this->lists[$listName]["active"], $originalItem);
 			array_splice($this->lists[$listName]["inactive"], $entryKey, 1);
 		}
+		$this->saveList();
+
+		return [ "status" => 200 ];
+	}
+
+	public function editItem($listName, $listType, $entryKey, $entry) {
+		$item = $this->getRequestBodyData();
+
+		$error = $this->verifyEntry($item);
+		if ($error !== null) {
+			return $error;
+		}
+
+		$this->lists[$listName][$listType][$entryKey]["name"] = $item["name"];
+		$this->lists[$listName][$listType][$entryKey]["category"] = $item["category"];
+		$this->lists[$listName][$listType][$entryKey]["number"] = $item["number"];
+		$this->lists[$listName][$listType][$entryKey]["unit"] = $item["unit"];
 		$this->saveList();
 
 		return [ "status" => 200 ];

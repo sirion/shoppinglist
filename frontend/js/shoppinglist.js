@@ -1,4 +1,7 @@
 import dom from "./utils/domtools.js";
+import Filter from "./utils/filter.js";
+import Dialogs from "./dialogs.js";
+
 
 class Shoppinglist {
 
@@ -8,10 +11,11 @@ class Shoppinglist {
 
 	async render(id) {
 		await dom.documentReady();
+		const onAction = this.onAction.bind(this);
+		const onAdd = this.onAdd.bind(this);
 
 		this.dom = document.querySelector("#" + id);
 
-		const onAction = this.onAction.bind(this);
 
 		this.activeList = dom.createElement("div", {
 			class: "list active",
@@ -31,6 +35,18 @@ class Shoppinglist {
 
 		this.controls = dom.createElement("div", {
 			class: "controls",
+			svg: [{
+				class: "add",
+				click: onAdd,
+				"version": "1.1",
+				"viewBox": "0 0 100 100",
+				"preserveAspectRatio": "none",
+				line: [{
+					x1: "50", y1: "15", x2: "50", y2: "85"
+				}, {
+					x1: "15", y1: "50", x2: "85", y2: "50"
+				}]
+			}]
 		});
 
 
@@ -44,6 +60,19 @@ class Shoppinglist {
 
 	async update() {
 		this.data = await this.getAPI("lists", "main");
+
+		this.categories = Filter.propertyUnique({ 
+			start: this.data.categories, 
+			removeEmpty: true, 
+			property: "category" 
+		}, this.data.active, this.data.inactive);
+		this.units = Filter.propertyUnique({
+			start: this.data.units,
+			removeEmpty: true,
+			property: "unit" 
+		}, this.data.active, this.data.inactive);
+
+		this.colors = this.data.colors ?? {};
 
 		dom.clearElement(this.activeList);
 		this.data.active.forEach(this.creatEntry.bind(this, this.activeList));
@@ -62,12 +91,13 @@ class Shoppinglist {
 		window.clearInterval(this._updateLoopInterval);
 	}
 
-
-	onButtonClick(event) {
-		debugger;
-
+	async onAdd(event) {
+		const entry = await Dialogs.entry(this.categories, this.units);
+		if (entry) {
+			await this.putAPI(entry, "lists", "main");
+		}
+		await this.update();
 	}
-
 
 	_longAction = false;
 	async onAction(event) {
@@ -79,20 +109,29 @@ class Shoppinglist {
 		}
 
 		if (!active && !inactive) {
+			const target = event.currentTarget
 			debugger;
 			return;
 		}
 
-		const checkLongAction = () => {
+
+		const entryNumber = event?.target?.dataset?.entry;
+		const checkLongAction = async () => {
 			// LongTouch
 			if (this._longAction) {
-				debugger;
 				this._ignoreNextEvent = true;
 
 				if (active) {
-					// TODO: Edit entry
+					// Edit entry
+					const entry = await Dialogs.entry(this.categories, this.units, this.data.active[entryNumber]);
+					if (entry) {
+						await this.putAPI(entry, "lists", "main", "active", entryNumber);
+					}
+					await this.update();
 				} else {
-					// TODO: Delete entry
+					// Delete entry
+					await this.deleteAPI(this.data.inactive[entryNumber], "lists", "main", "inactive", entryNumber);
+					await this.update();
 				}
 			}
 		};
@@ -100,7 +139,7 @@ class Shoppinglist {
 		if (event.type === "touchstart" || event.type === "mousedown") {
 			this._longAction = true;
 			clearTimeout(this._logActionTimeout);
-			this._logActionTimeout = setTimeout(checkLongAction, 1500);
+			this._logActionTimeout = setTimeout(checkLongAction, 1000);
 			return;
 		} else if (event.type === "touchend" || event.type === "mouseup") {
 			this._longAction = false;
@@ -152,7 +191,7 @@ class Shoppinglist {
 		list.appendChild(dom.createElement("div", {
 			class: "category category-" + data.category,
 			style: {
-				"background-color": data.color
+				"background-color": this.getCategoryColor(data.category)
 			},
 			div: {
 				textContent: data.category,
@@ -163,13 +202,13 @@ class Shoppinglist {
 
 		list.appendChild(dom.createElement("div", {
 			class: "amountNum",
-			textContent: data.amount.number,
+			textContent: data.number,
 			"data-entry": i
 		}));
 
 		list.appendChild(dom.createElement("div", {
 			class: "amountUnit",
-			textContent: data.amount.unit,
+			textContent: data.unit,
 			"data-entry": i
 		}));
 
@@ -190,8 +229,20 @@ class Shoppinglist {
 	}
 
 	async postAPI(payload, ...parts) {
+		return this.useAPI("POST", payload, ...parts);
+	}
+
+	async putAPI(payload, ...parts) {
+		return this.useAPI("PUT", payload, ...parts);
+	}
+
+	async deleteAPI(payload, ...parts) {
+		return this.useAPI("DELETE", payload, ...parts);
+	}
+
+	async useAPI(method, payload, ...parts) {
 		const result = await fetch(this.apiPath + "/" + parts.join("/"), {
-			method: "POST",
+			method: method,
 			headers: {
 				"Content-Type": "application/json"
 			},
@@ -204,6 +255,17 @@ class Shoppinglist {
 		return await result.json();
 	}
 
+	getCategoryColor(category) {
+		if (!this.colors[category]) {
+			let hash = 4; // Random start
+			for (var i = 0; i < category.length; i++) {
+				hash = ((hash<<5) - hash) + category.charCodeAt(i);
+				hash = hash & hash; // Convert to 32bit integer
+			}
+			this.colors[category] = "#" + hash.toString(16).substring(1, 7);
+		}
+		return this.colors[category];
+	}
 }
 
 export default Shoppinglist;

@@ -3,6 +3,8 @@ import Filter from "./utils/filter.js";
 import Dialogs from "./dialogs.js";
 
 
+const useTouch = !!window.TouchEvent;
+
 class Shoppinglist {
 
 	constructor() {
@@ -19,18 +21,18 @@ class Shoppinglist {
 
 		this.activeList = dom.createElement("div", {
 			class: "list active",
-			touchstart: onAction,
-			touchend: onAction,
-			mousedown: onAction,
-			mouseup: onAction
+			touchstart: useTouch ? onAction : undefined,
+			touchend: useTouch ? onAction : undefined,
+			mousedown: useTouch ? undefined : onAction,
+			mouseup: useTouch ? undefined : onAction
 		});
 
 		this.inactiveList = dom.createElement("div", {
 			class: "list inactive",
-			touchstart: onAction,
-			touchend: onAction,
-			mousedown: onAction,
-			mouseup: onAction
+			touchstart: useTouch ? onAction : undefined,
+			touchend: useTouch ? onAction : undefined,
+			mousedown: useTouch ? undefined : onAction,
+			mouseup: useTouch ? undefined : onAction
 		});
 
 		this.controls = dom.createElement("div", {

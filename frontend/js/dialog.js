@@ -1,10 +1,7 @@
-let supportsNativeDialog = true;
-if (!window.HTMLDialogElement) {
-	window.HTMLDialogElement = window.HTMLElement;
-	supportsNativeDialog = false;
-}
 
-export default class Dialog extends HTMLDialogElement {
+// TODO: Extend native dialog once supported in Firefox and Chrome
+
+export default class Dialog extends HTMLElement {
 	////////////////////////////////////////////// Static Private Methods /////////////////////////////////////////////
 
 	////////////////////////////////////////////// Static Public Methods //////////////////////////////////////////////
@@ -20,14 +17,17 @@ export default class Dialog extends HTMLDialogElement {
 			dialog.addEventListener("ok", () => {
 				dialog.returnValue = true;
 				dialog.close();
+				document.body.removeChild(dialog);
 				resolve();
 			});
 			dialog.addEventListener("cancel", () => {
 				dialog.returnValue = false;
 				dialog.close();
+				document.body.removeChild(dialog);
 				reject();
 			});
 
+			document.body.append(dialog);
 			dialog.show();
 		});
 	}
@@ -44,9 +44,7 @@ export default class Dialog extends HTMLDialogElement {
 	constructor(...args) {
 		super();
 
-		if (!supportsNativeDialog) {
-			this._enrichDialog();
-		}
+		this._enrichDialog();
 
 		this._initDom();
 	}
@@ -130,7 +128,8 @@ export default class Dialog extends HTMLDialogElement {
 			"grid-template-rows": "2rem auto 2rem",
 			"grid-template-areas": '"h" "c" "f"',
 			"background-color": "white",
-			"padding": "0.5rem"
+			"padding": "0.5rem",
+			"box-shadow": "3px 3px 6px #444"
 		});
 		this.classList.add("dialog");
 
@@ -140,7 +139,7 @@ export default class Dialog extends HTMLDialogElement {
 			"height": "2rem",
 			"text-align": "center",
 			"line-height": "2rem",
-			"font-size": "1.25rem",
+			"font-size": "1.25rem"
 		});
 		this._dom.header.classList.add("title");
 		this._dom.header.textContent;
@@ -162,8 +161,8 @@ export default class Dialog extends HTMLDialogElement {
 		Object.assign(this._dom.footer.style, {
 			"grid-area": "f",
 			"display": "flex",
-			"justify-content": "end",
-			"align-items": "center",
+			"justify-content": "flex-end",
+			"align-items": "center"
 		});
 		this._dom.footer.classList.add("footer");
 		this._dom.footer.append(this._dom.btnOk, this._dom.btnCancel);
@@ -180,7 +179,7 @@ export default class Dialog extends HTMLDialogElement {
 			left: "50%",
 			width: "auto",
 			height: "auto",
-			translate: "-50%",
+			translate: "-50%"
 		});
 
 		let blockLayer;
@@ -198,7 +197,6 @@ export default class Dialog extends HTMLDialogElement {
 		};
 
 		this.show = () => {
-			document.body.append(this);
 			this.open = true;
 		};
 		this.showModal = () => {
@@ -220,9 +218,4 @@ export default class Dialog extends HTMLDialogElement {
 
 
 }
-
-if (supportsNativeDialog) {
-	customElements.define("mi-dialog", Dialog, { extends: "dialog" });
-} else {
-	customElements.define("mi-dialog", Dialog);
-}
+customElements.define("mi-dialog", Dialog);

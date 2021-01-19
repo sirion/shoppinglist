@@ -41,7 +41,7 @@ body {
 	/* grid-template-columns:                  category            amountNum           amountUnit   name               button; */
 	grid-template-columns: calc(var(--item-height) * 5)   var(--item-height)   var(--item-height)   auto;   /* calc(var(--item-height) * 1.25) */;
 	grid-auto-rows: calc(var(--item-height) * 1.5);
-	row-gap: calc(var(--item-height) / 3);
+	row-gap: 0; /* calc(var(--item-height) / 3); */
 	column-gap: calc(var(--item-height) / 4);
 	align-items: center;
 	user-select: none;
@@ -130,7 +130,7 @@ body {
 
 
 .active {
-	background: white;
+	background: linear-gradient(to bottom, white calc(100% - 8px), #888 100%);
 	padding-bottom: var(--item-height);
 }
 
@@ -139,14 +139,14 @@ body {
 
 .inactive {
 	/* background: linear-gradient(0, #5555, #555 20%, #555); */
-	background-color: transparent;
+	background: linear-gradient(to top, transparent calc(100% - 8px), #888 100%);
 	color: #fff;
 	padding-top: var(--item-height);
 	padding-bottom: var(--item-height);
 }
 
 .inactive > * {
-	opacity: 0.5;
+	opacity: 0.4;
 }
 
 /***** Menu and Controls *****/

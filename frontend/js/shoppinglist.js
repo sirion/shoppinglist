@@ -3,7 +3,7 @@ import Filter from "./utils/filter.js";
 import Dialogs from "./dialogs.js";
 
 
-const useTouch = !!window.TouchEvent;
+const useTouch = !!(window.DocumentTouch && document instanceof DocumentTouch);
 
 class Shoppinglist {
 

@@ -8,11 +8,11 @@ export default class Dialog extends HTMLElement {
 
 	static async confirm(title, content = []) {
 
-		await new Promise((resolve, reject) => {
+		await new Promise((resolve /*, reject */) => {
 			const dialog = new Dialog();
 			dialog.title = title;
 
-			dialog.append(...content)
+			dialog.append(...content);
 
 			dialog.addEventListener("ok", () => {
 				dialog.returnValue = true;
@@ -32,15 +32,19 @@ export default class Dialog extends HTMLElement {
 
 	////////////////////////////////////////////// Static Private Methods /////////////////////////////////////////////
 
-	//////////////////////////////////////////// Static Private Properties ////////////////////////////////////////////
-
-	static _idCounter = 0
-
-
 	//////////////////////////////////////////////////// Contructor ///////////////////////////////////////////////////
 
-	constructor(...args) {
+	constructor() {
 		super();
+
+		//////////////////////////////////////////////// Private Properties ///////////////////////////////////////////////
+
+		this._type = null;
+		this._dom = {
+			header: null,
+			content: null,
+			footer: null
+		};
 
 		this._enrichDialog();
 
@@ -50,8 +54,6 @@ export default class Dialog extends HTMLElement {
 
 	//////////////////////////////////////////////// Public Properties ////////////////////////////////////////////////
 
-	_type = null;
-	
 	get type() {
 		return this._type;
 	}
@@ -95,14 +97,6 @@ export default class Dialog extends HTMLElement {
 		return this._dom.content.append(...elements);
 	}
 
-	//////////////////////////////////////////////// Private Properties ///////////////////////////////////////////////
-
-	_dom = {
-		header: null,
-		content: null,
-		footer: null
-	};
-
 
 	///////////////////////////////////////////////// Private Methods /////////////////////////////////////////////////
 
@@ -110,11 +104,11 @@ export default class Dialog extends HTMLElement {
 		return HTMLElement.prototype.append.apply(this, arguments);
 	}
 
-	_onOkClicked(event) {
+	_onOkClicked(/* event */) {
 		this.dispatchEvent(new CustomEvent("ok", {}));
 	}
 
-	_onCancelClicked(event) {
+	_onCancelClicked(/* event */) {
 		this.dispatchEvent(new CustomEvent("cancel", {}));
 	}
 
@@ -129,8 +123,8 @@ export default class Dialog extends HTMLElement {
 			"padding": "0.5rem",
 			"box-shadow": "3px 3px 6px #444",
 			"top": "50%",
-    		"transform": "translate(-50%, -50%)",
-    		"left": "50%",
+			"transform": "translate(-50%, -50%)",
+			"left": "50%",
 		});
 		this.classList.add("dialog");
 
@@ -219,4 +213,11 @@ export default class Dialog extends HTMLElement {
 
 
 }
+
+//////////////////////////////////////////// Static Private Properties ////////////////////////////////////////////
+
+Dialog._idCounter = 0;
+
+
 customElements.define("mi-dialog", Dialog);
+

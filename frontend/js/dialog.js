@@ -17,14 +17,12 @@ export default class Dialog extends HTMLElement {
 			dialog.addEventListener("ok", () => {
 				dialog.returnValue = true;
 				dialog.close();
-				document.body.removeChild(dialog);
-				resolve();
+				resolve(true);
 			});
 			dialog.addEventListener("cancel", () => {
 				dialog.returnValue = false;
 				dialog.close();
-				document.body.removeChild(dialog);
-				reject();
+				resolve(false);
 			});
 
 			document.body.append(dialog);
@@ -109,7 +107,7 @@ export default class Dialog extends HTMLElement {
 	///////////////////////////////////////////////// Private Methods /////////////////////////////////////////////////
 
 	_append() {
-		return window.HTMLDialogElement.prototype.append.apply(this, arguments);
+		return HTMLElement.prototype.append.apply(this, arguments);
 	}
 
 	_onOkClicked(event) {
@@ -129,7 +127,10 @@ export default class Dialog extends HTMLElement {
 			"grid-template-areas": '"h" "c" "f"',
 			"background-color": "white",
 			"padding": "0.5rem",
-			"box-shadow": "3px 3px 6px #444"
+			"box-shadow": "3px 3px 6px #444",
+			"top": "50%",
+    		"transform": "translate(-50%, -50%)",
+    		"left": "50%",
 		});
 		this.classList.add("dialog");
 

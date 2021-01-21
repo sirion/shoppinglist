@@ -3,11 +3,12 @@ import Filter from "./utils/filter.js";
 import Dialogs from "./dialogs.js";
 
 
-const useTouch = !!(window.DocumentTouch && document instanceof DocumentTouch);
+const useTouch = !!(window.DocumentTouch && document instanceof window.DocumentTouch);
 
 class Shoppinglist {
 
 	constructor() {
+		this._longAction = false;
 		this.apiPath = "/api";
 	}
 
@@ -93,7 +94,7 @@ class Shoppinglist {
 		window.clearInterval(this._updateLoopInterval);
 	}
 
-	async onAdd(event) {
+	async onAdd(/* event */) {
 		const entry = await Dialogs.entry(this.categories, this.units);
 		if (entry) {
 			await this.putAPI(entry, "lists", "main");
@@ -101,7 +102,6 @@ class Shoppinglist {
 		await this.update();
 	}
 
-	_longAction = false;
 	async onAction(event) {
 		let active = false, inactive = false;
 		if (event.currentTarget === this.activeList) {
@@ -111,8 +111,6 @@ class Shoppinglist {
 		}
 
 		if (!active && !inactive) {
-			const target = event.currentTarget
-			debugger;
 			return;
 		}
 
@@ -169,7 +167,6 @@ class Shoppinglist {
 		}
 
 		if (element === null) {
-			debugger;
 			return;
 		}
 

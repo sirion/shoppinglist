@@ -1,1 +1,2 @@
-/backend/data
+backend/data/**
+!backend/data/list-test.json

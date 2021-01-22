@@ -1,3 +1,16 @@
 import Shoppinglist from "./shoppinglist.js";
 
-new Shoppinglist().render("list");
+async function registerServiceWorker() {
+	try {
+		await navigator.serviceWorker.register("./js/sw/sw.js");
+	} catch (ex) {
+		console.error("Error registering service worker: " + ex.message);
+	}
+}
+
+(async () => {
+	await registerServiceWorker();
+	const app = new Shoppinglist();
+	app.render("list");
+})();
+

@@ -8,11 +8,16 @@ const useTouch = !!(window.DocumentTouch && document instanceof window.DocumentT
 class Shoppinglist {
 
 	constructor() {
-		this._longAction = false;
+		this.longAction = false;
 		this.apiPath = "/api";
+		this.accessCode = undefined;
+		
 	}
 
 	async render(id) {
+		await this.verfifyCode();
+		const dataLoaded = this.getAPI("lists", "main");
+
 		await dom.documentReady();
 		const onAction = this.onAction.bind(this);
 		const onAdd = this.onAdd.bind(this);
@@ -57,12 +62,34 @@ class Shoppinglist {
 		this.dom.appendChild(this.activeList);
 		this.dom.appendChild(this.inactiveList);
 
-		// this.startUpdateLoop();
-		this.update();
+		
+		this.update(await dataLoaded);
 	}
 
-	async update() {
-		this.data = await this.getAPI("lists", "main");
+	async verfifyCode() {
+		this.accessCode = localStorage.getItem("code");
+	
+		const matched = location.search.match(/[?&]code=([^&]*)/);
+		if (matched) {
+			this.accessCode = matched[1];
+		}
+	
+		if (!this.accessCode) {
+			this.accessCode = prompt("Please provide access code:");
+		}
+
+		localStorage.setItem("code", this.accessCode);
+	}
+
+	async update(data) {
+		if (data.type === "error") {
+			alert("Invalid Access Code");
+			localStorage.removeItem("code");
+			location.reload();
+			return;
+		}
+
+		this.data = data;
 
 		this.categories = Filter.propertyUnique({ 
 			start: this.data.categories, 
@@ -118,7 +145,7 @@ class Shoppinglist {
 		const entryNumber = event?.target?.dataset?.entry;
 		const checkLongAction = async () => {
 			// LongTouch
-			if (this._longAction) {
+			if (this.longAction) {
 				this._ignoreNextEvent = true;
 
 				if (active) {
@@ -137,12 +164,12 @@ class Shoppinglist {
 		};
 
 		if (event.type === "touchstart" || event.type === "mousedown") {
-			this._longAction = true;
+			this.longAction = true;
 			clearTimeout(this._logActionTimeout);
 			this._logActionTimeout = setTimeout(checkLongAction, 1000);
 			return;
 		} else if (event.type === "touchend" || event.type === "mouseup") {
-			this._longAction = false;
+			this.longAction = false;
 		}
 
 		if (this._ignoreNextEvent) {
@@ -220,11 +247,7 @@ class Shoppinglist {
 
 
 	async getAPI(...parts) {
-		const result = await fetch(this.apiPath + "/" + parts.join("/"));
-		if (result.status === 204) {
-			return true;
-		}
-		return await result.json();
+		return this.useAPI("GET", null, ...parts);
 	}
 
 	async postAPI(payload, ...parts) {
@@ -243,9 +266,10 @@ class Shoppinglist {
 		const result = await fetch(this.apiPath + "/" + parts.join("/"), {
 			method: method,
 			headers: {
+				"X-Access-Code": this.accessCode,
 				"Content-Type": "application/json"
 			},
-			body: JSON.stringify(payload)
+			body: payload ? JSON.stringify(payload) : undefined
 		});
 
 		if (result.status === 204) {

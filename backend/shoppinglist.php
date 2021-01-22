@@ -2,14 +2,15 @@
 
 class Errors {
 
-	const Invalid_API     = [ "e01", "Invalid API Request" ];
-	const Invalid_Body    = [ "e03", "Invalid Request Body" ];
-	const Invalid_Delete  = [ "e05", "Invalid Delete Request" ];
-	const List_Not_Found  = [ "e06", "List not Found" ];
+	const Invalid_API         = [ "e01", "Invalid API Request", 400];
+	const Invalid_Body        = [ "e03", "Invalid Request Body", 400 ];
+	const Invalid_Delete      = [ "e05", "Invalid Delete Request", 400 ];
+	const List_Not_Found      = [ "e06", "List not Found", 404 ];
+	const Invalid_Access_Code = [ "e07", "Invalid Access Code", 401 ];
 
-	const NYI_Delete_List = [ "e96", "Deleting lists is not possible" ];
-	const NYI_Create_List = [ "e97", "Creating lists is not possible"];
-	const NYI             = [ "e98", "Not Yet Implemented" ];
+	const NYI_Delete_List     = [ "e96", "Deleting lists is not possible", 500 ];
+	const NYI_Create_List     = [ "e97", "Creating lists is not possible", 500 ];
+	const NYI                 = [ "e98", "Not Yet Implemented", 500 ];
 }
 
 
@@ -34,7 +35,7 @@ class Shoppinglist {
 
 	//////////////////////////////////// Private Properties ////////////////////////////////////
 
-	private $listFile = __DIR__ . "/data/list.json";
+	private $listFile = null;
 
 	private $lists = [
 		"main" => [
@@ -51,11 +52,22 @@ class Shoppinglist {
 	//////////////////////////////////// Constructor ////////////////////////////////////
 
 	public function __construct() {
+	}
+
+	//////////////////////////////////// Public Methods ////////////////////////////////////
+
+	private function loadList() {
+		$code = $_SERVER['HTTP_X_ACCESS_CODE'];
+		if (preg_match('/^[a-z0-9]{4,12}$/i', $code) !== 1) {
+			// Invalid code
+			return false;
+		}
+		$this->listFile = __DIR__ . "/data/list-$code.json";
+
 		if (file_exists($this->listFile)) {
 			$this->lists = json_decode(file_get_contents($this->listFile), true);
 		} else {
-			echo "{$this->listFile} NOT FOUND... ";
-			die();
+			return false;
 		}
 		if (!isset($this->lists)) {
 			$this->lists = [];
@@ -81,36 +93,23 @@ class Shoppinglist {
 				// [ "category" => "süßkram", "name" => "abc abc abc abc abc abc abc abc abc abc abc abc abc abc abc", "number" => 1, "unit" => "" ],
 			];
 		}
-	}
 
-	//////////////////////////////////// Public Methods ////////////////////////////////////
+		return true;
+	}
 
 	public function serve() {
 		$actions = isset($_REQUEST["action"]) ? explode("/", trim($_REQUEST["action"], "/")) : [];
 		$action = array_shift($actions);
 
-		// header("Content-Type: application/json");
-		// echo json_encode([
-		// 	"action" => $action,
-		// 	"parts" => $actions
-		// ]);
 
-
-		switch ($action) {
-
-			case "":
-				$output = $this->getInfo();
-				break;
-
-			case "lists":
-				$output = $this->getList($actions);
-				break;
-
-
-			default:
-				$output = $this->error(Errors::NYI);
-				break;
-
+		if (!$this->loadList()) {
+			$output = $this->error(Errors::Invalid_Access_Code);
+		} else if ($action === "") {
+			$output = $this->getInfo();
+		} else if ($action === "lists") {
+			$output = $this->getList($actions);
+		} else {
+			$output = $this->error(Errors::NYI);
 		}
 
 
@@ -365,7 +364,8 @@ class Shoppinglist {
 		$err = [
 			"type" => "error",
 			"code" => $error[0],
-			"message" => $error[1]
+			"message" => $error[1],
+			"status" => $error[2]
 		];
 
 		if (!empty($details)) {

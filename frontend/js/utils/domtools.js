@@ -76,19 +76,21 @@ class DOMTools {
 		}
 
 		for (var name in attributes) {
-			if (Array.isArray(attributes[name])) {
+			if (attributes[name] === undefined) {
+				continue;
+			} else if (Array.isArray(attributes[name])) {
 				// Mutiple sub elements of same type
 				attributes[name].forEach(attr => {
 					el.appendChild(DOMTools.createElement(name, attr, namespace));
 				});
-			} else if (attributes[name] === undefined || attributes[name] === null) {
+			} else if (attributes[name] === null) {
 				// Text node
 				el.appendChild(document.createTextNode(name));
 			} else if (name === "textContent") {
 				// Text node
 				el.textContent = attributes[name];
 			} else if (name === "style") {
-				// Text node
+				// Styles
 				Object.keys(attributes[name]).forEach(key => {
 					el.style[key] = attributes[name][key];
 				});

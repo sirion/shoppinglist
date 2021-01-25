@@ -1,6 +1,6 @@
 const cacheName = "shoppinglist-v0.2";
 
-const cachedURIs = [];
+// const cachedURIs = [];
 
 async function loadFromCache(request) {
 	if (request.url.indexOf("/api") === 0) {
@@ -9,7 +9,7 @@ async function loadFromCache(request) {
 
 	let response = await caches.match(request);
 	if (!response) {
-		console.log('[Service Worker] Caching resource '+ request.url);
+		console.log("[Service Worker] Caching resource " + request.url);
 		response = await fetch(request);
 		const cache = caches.open(cacheName);
 		cache.put(request, response.clone());
@@ -24,8 +24,8 @@ async function clearOldCaches() {
 	}
 }
 
-self.addEventListener('install', e => {
-	console.log('[Service Worker] Install');
+self.addEventListener("install", e => {
+	console.log("[Service Worker] Install");
 	// const cacheReady = caches.open(cacheName).then(cache => {
 	// 	return cache.addAll(cachedURIs);
 	// });
@@ -33,13 +33,13 @@ self.addEventListener('install', e => {
 	// e.waitUntil(cacheReady);
 });
 
-self.addEventListener('activate', e => {
-	console.log('[Service Worker] Activate');
+self.addEventListener("activate", e => {
+	console.log("[Service Worker] Activate");
 	e.waitUntil(clearOldCaches());
 });
 
 
-self.addEventListener('fetch', e => {
+self.addEventListener("fetch", e => {
 	e.respondWith(loadFromCache(e.request));
 });
 

@@ -1,6 +1,4 @@
 
-// TODO: Extend native dialog once supported in Firefox and Chrome
-
 export default class Dialog extends HTMLElement {
 	////////////////////////////////////////////// Static Private Methods /////////////////////////////////////////////
 
@@ -37,7 +35,7 @@ export default class Dialog extends HTMLElement {
 	constructor() {
 		super();
 
-		//////////////////////////////////////////////// Private Properties ///////////////////////////////////////////////
+		////////////////////////////////////////////// Private Properties //////////////////////////////////////////////
 
 		this._type = null;
 		this._dom = {
@@ -63,25 +61,25 @@ export default class Dialog extends HTMLElement {
 			return;
 		}
 		switch (type) {
-			case "confirm":
-				this._dom.btnOk.style.display = "block";
-				this._dom.btnOk.textContent = "Ok";
+		case "confirm":
+			this._dom.btnOk.style.display = "block";
+			this._dom.btnOk.textContent = "Ok";
 
-				this._dom.btnCancel.style.display = "block";
-				this._dom.btnCancel.textContent = "Cancel";
+			this._dom.btnCancel.style.display = "block";
+			this._dom.btnCancel.textContent = "Cancel";
 
-				break;
+			break;
 
-			default:
-				console.error("[Dialog] Invalid dialog type set.");
-				// fall through
-			case "info":
-				this._dom.btnOk.style.display = "block";
-				this._dom.btnOk.textContent = "Close";
+		default:
+			console.error("[Dialog] Invalid dialog type set.");
+			// fall through
+		case "info":
+			this._dom.btnOk.style.display = "block";
+			this._dom.btnOk.textContent = "Close";
 
-				this._dom.btnCancel.style.display = "none";
-				this._dom.btnCancel.textContent = "";
-				break;
+			this._dom.btnCancel.style.display = "none";
+			this._dom.btnCancel.textContent = "";
+			break;
 		}
 	}
 
@@ -103,8 +101,8 @@ export default class Dialog extends HTMLElement {
 
 	///////////////////////////////////////////////// Private Methods /////////////////////////////////////////////////
 
-	_append() {
-		return HTMLElement.prototype.append.apply(this, arguments);
+	_append(...elements) {
+		return HTMLElement.prototype.append.apply(this, elements);
 	}
 
 	_onOkClicked(/* event */) {

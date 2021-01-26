@@ -8,7 +8,7 @@ class DOMTools {
 	 * @returns {Promise<Event>} - The resolved promise with the fired event
 	 */
 	static async nextEvent(element, eventname) {
-		await new Promise(resolve => element.addEventListener(eventname, resolve));
+		await new Promise(resolve => { element.addEventListener(eventname, resolve); });
 	}
 
 
@@ -50,8 +50,6 @@ class DOMTools {
 	 * @returns {HTMLElement}
 	 */
 	static createElement(type, attributes, namespace) {
-		var el;
-
 		if (!namespace) {
 			if (type.toLowerCase() === "svg") {
 				namespace = "http://www.w3.org/2000/svg";
@@ -60,11 +58,7 @@ class DOMTools {
 			}
 		}
 
-		if (namespace) {
-			el = document.createElementNS(namespace, type);
-		} else {
-			el = document.createElement(type);
-		}
+		const el = namespace ? document.createElementNS(namespace, type) : document.createElement(type);
 
 		// Short syntax: string conly creates an element with textContent
 		if (typeof(attributes) === "string") {
@@ -75,7 +69,7 @@ class DOMTools {
 			return el;
 		}
 
-		for (var name in attributes) {
+		for (const name in attributes) {
 			if (attributes[name] === undefined) {
 				continue;
 			} else if (Array.isArray(attributes[name])) {

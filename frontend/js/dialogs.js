@@ -11,12 +11,12 @@ export default class Dialogs {
 			if (!category) {
 				e.target.options.selectedIndex = 0;
 			} else {
-				const newOption = dom.createElement("option", {
+				const option = dom.createElement("option", {
 					value: category,
 					textContent: category
 				});
-				e.target.append(newOption);
-				newOption.selected = true;
+				e.target.append(option);
+				option.selected = true;
 			}
 		};
 
@@ -78,10 +78,9 @@ export default class Dialogs {
 				number:	Number(number.value),
 				unit:	unit.value
 			};
-		} else {
-			// Canceled
-			return false;
 		}
 
+		// Canceled
+		return false;
 	}
 }

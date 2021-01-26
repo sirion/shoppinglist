@@ -69,7 +69,7 @@ class Shoppinglist {
 	async verfifyCode() {
 		this.accessCode = localStorage.getItem("code");
 
-		const matched = location.search.match(/[?&]code=([^&]*)/);
+		const matched = location.search.match(/[?&]code=([^&]*)/u);
 		if (matched) {
 			this.accessCode = matched[1];
 		}
@@ -277,13 +277,13 @@ class Shoppinglist {
 		if (result.status === 204) {
 			return true;
 		}
-		return await result.json();
+		return result.json();
 	}
 
 	getCategoryColor(category) {
 		if (!this.colors[category]) {
 			let hash = 4; // Random start
-			for (var i = 0; i < category.length; i++) {
+			for (let i = 0; i < category.length; i++) {
 				hash = ((hash << 5) - hash) + category.charCodeAt(i);
 				hash = hash & hash; // Convert to 32bit integer
 			}

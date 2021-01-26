@@ -13,4 +13,3 @@ async function registerServiceWorker() {
 	const app = new Shoppinglist();
 	app.render("list");
 })();
-

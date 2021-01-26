@@ -59,7 +59,7 @@ export default class Dialog extends HTMLElement {
 	}
 
 	set type(type) {
-		if (type == this._type) {
+		if (type === this._type) {
 			return;
 		}
 		switch (type) {
@@ -71,7 +71,10 @@ export default class Dialog extends HTMLElement {
 				this._dom.btnCancel.textContent = "Cancel";
 
 				break;
-			
+
+			default:
+				console.error("[Dialog] Invalid dialog type set.");
+				// fall through
 			case "info":
 				this._dom.btnOk.style.display = "block";
 				this._dom.btnOk.textContent = "Close";
@@ -124,7 +127,7 @@ export default class Dialog extends HTMLElement {
 			"box-shadow": "3px 3px 6px #444",
 			"top": "50%",
 			"transform": "translate(-50%, -50%)",
-			"left": "50%",
+			"left": "50%"
 		});
 		this.classList.add("dialog");
 
@@ -137,12 +140,11 @@ export default class Dialog extends HTMLElement {
 			"font-size": "1.25rem"
 		});
 		this._dom.header.classList.add("title");
-		this._dom.header.textContent;
-		
+
 		this._dom.content = document.createElement("div");
 		this._dom.content.style["grid-area"] = "c";
 		Object.assign(this._dom.content.style, {
-			"grid-area": "c",
+			"grid-area": "c"
 		});
 		this._dom.content.classList.add("content");
 
@@ -218,6 +220,4 @@ export default class Dialog extends HTMLElement {
 
 Dialog._idCounter = 0;
 
-
 customElements.define("mi-dialog", Dialog);
-

@@ -31,7 +31,7 @@ export default class Dialogs {
 				selected: entry.category === ""
 			}, {
 				value: "<new>",
-				textContent: "<new>",
+				textContent: "<new>"
 			}].concat(categories.map(e => { return { value: e, textContent: e, selected: entry.category === e }; }))
 		});
 		const number = dom.createElement("input", {
@@ -49,7 +49,7 @@ export default class Dialogs {
 				selected: entry.unit === ""
 			}, {
 				value: "<new>",
-				textContent: "<new>",
+				textContent: "<new>"
 			}].concat(units.map(e => { return { value: e, textContent: e, selected: entry.unit === e }; }))
 		});
 		const name = dom.createElement("input", {
@@ -59,7 +59,7 @@ export default class Dialogs {
 		const table = dom.createElement("table", {
 			tr: [{
 				th: [
-					"Category", "#", "", "Name",
+					"Category", "#", "", "Name"
 				]
 			}, {
 				td: [
@@ -68,7 +68,7 @@ export default class Dialogs {
 			}]
 		});
 
-		const ok = await Dialog.confirm("Add new Entry", [ table ]);
+		const ok = await Dialog.confirm("Add new Entry", [table]);
 
 		if (ok) {
 			// Entry
@@ -76,7 +76,7 @@ export default class Dialogs {
 				category: category.value,
 				name:	name.value,
 				number:	Number(number.value),
-				unit:	unit.value,
+				unit:	unit.value
 			};
 		} else {
 			// Canceled
@@ -84,5 +84,4 @@ export default class Dialogs {
 		}
 
 	}
-
 }

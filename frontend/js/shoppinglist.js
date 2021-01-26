@@ -11,7 +11,7 @@ class Shoppinglist {
 		this.longAction = false;
 		this.apiPath = "/api";
 		this.accessCode = undefined;
-		
+
 	}
 
 	async render(id) {
@@ -46,9 +46,9 @@ class Shoppinglist {
 			svg: [{
 				class: "add",
 				click: onAdd,
-				"version": "1.1",
-				"viewBox": "0 0 100 100",
-				"preserveAspectRatio": "none",
+				version: "1.1",
+				viewBox: "0 0 100 100",
+				preserveAspectRatio: "none",
 				line: [{
 					x1: "50", y1: "15", x2: "50", y2: "85"
 				}, {
@@ -62,18 +62,18 @@ class Shoppinglist {
 		this.dom.appendChild(this.activeList);
 		this.dom.appendChild(this.inactiveList);
 
-		
+
 		this.update(await dataLoaded);
 	}
 
 	async verfifyCode() {
 		this.accessCode = localStorage.getItem("code");
-	
+
 		const matched = location.search.match(/[?&]code=([^&]*)/);
 		if (matched) {
 			this.accessCode = matched[1];
 		}
-	
+
 		if (!this.accessCode) {
 			this.accessCode = prompt("Please provide access code:");
 		}
@@ -91,15 +91,15 @@ class Shoppinglist {
 
 		this.data = data;
 
-		this.categories = Filter.propertyUnique({ 
-			start: this.data.categories, 
-			removeEmpty: true, 
-			property: "category" 
+		this.categories = Filter.propertyUnique({
+			start: this.data.categories,
+			removeEmpty: true,
+			property: "category"
 		}, this.data.active, this.data.inactive);
 		this.units = Filter.propertyUnique({
 			start: this.data.units,
 			removeEmpty: true,
-			property: "unit" 
+			property: "unit"
 		}, this.data.active, this.data.inactive);
 
 		this.colors = this.data.colors ?? {};
@@ -130,7 +130,9 @@ class Shoppinglist {
 	}
 
 	async onAction(event) {
-		let active = false, inactive = false;
+		let active = false;
+		let inactive = false;
+
 		if (event.currentTarget === this.activeList) {
 			active = true;
 		} else if (event.currentTarget === this.inactiveList) {
@@ -282,7 +284,7 @@ class Shoppinglist {
 		if (!this.colors[category]) {
 			let hash = 4; // Random start
 			for (var i = 0; i < category.length; i++) {
-				hash = ((hash<<5) - hash) + category.charCodeAt(i);
+				hash = ((hash << 5) - hash) + category.charCodeAt(i);
 				hash = hash & hash; // Convert to 32bit integer
 			}
 			this.colors[category] = "#" + hash.toString(16).substring(1, 7);

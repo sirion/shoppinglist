@@ -24,7 +24,7 @@ async function clearOldCaches() {
 	}
 }
 
-self.addEventListener("install", e => {
+self.addEventListener("install", (/* e */) => {
 	console.log("[Service Worker] Install");
 	// const cacheReady = caches.open(cacheName).then(cache => {
 	// 	return cache.addAll(cachedURIs);
@@ -42,4 +42,3 @@ self.addEventListener("activate", e => {
 self.addEventListener("fetch", e => {
 	e.respondWith(loadFromCache(e.request));
 });
-

@@ -16,6 +16,11 @@
 	"extends": "eslint:recommended",
     "rules": {
 		"semi": "error",
-		"no-unused-vars": "warn"
+		"no-unused-vars": "warn",
+		"comma-dangle": ["error", "never"],
+		"no-trailing-spaces": "error",
+		"eol-last": ["error", "always"],
+		"space-infix-ops": "error",
+		"no-unused-expressions": "error"
     }
 }

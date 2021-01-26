@@ -6,15 +6,15 @@ export default class Filter {
 		}
 		const result = {};
 		if (options.start) {
-			for (let e of options.start) {
+			for (const e of options.start) {
 				if (!options.removeEmpty || e) {
 					result[e] = true;
 				}
 			}
 		}
 
-		for (let l of lists) {
-			for (let e of l) {
+		for (const l of lists) {
+			for (const e of l) {
 				if (!options.removeEmpty || e[options.property]) {
 					result[e[options.property]] = true;
 				}

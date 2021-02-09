@@ -44,6 +44,12 @@ class Shoppinglist {
 			window.addEventListener("online", () => { this.lists.offline = false; });
 			window.addEventListener("offline", () => { this.lists.offline = true; });
 
+			document.addEventListener("visibilitychange", () => {
+				if (document.visibilityState === "visible") {
+					this.refreshData(true);
+				}
+			});
+
 		})();
 	}
 

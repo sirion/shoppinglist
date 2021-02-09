@@ -42,6 +42,9 @@ class Shoppinglist {
 
 	private $lists = [
 		"main" => [
+			"meta" => [
+				// "changed" => time() * 1000
+			],
 			"active" => [
 				// [ "category" => "abc", "name" => "abc", "number" => 100, "unit" => "g" ],
 			],
@@ -60,6 +63,10 @@ class Shoppinglist {
 	//////////////////////////////////// Public Methods ////////////////////////////////////
 
 	private function loadList() {
+		if (empty($_SERVER['HTTP_X_ACCESS_CODE'])) {
+			// No code
+			return false;
+		}
 		$code = $_SERVER['HTTP_X_ACCESS_CODE'];
 		if (preg_match('/^[a-z0-9]{4,12}$/i', $code) !== 1) {
 			// Invalid code
@@ -80,23 +87,17 @@ class Shoppinglist {
 			$this->lists["main"] = [];
 		}
 		if (!isset($this->lists["main"]["active"])) {
-			$this->lists["main"]["active"] = [
-				// [ "category" => "1", "name" => "abc", "number" => 100, "unit" => "g" ],
-				// [ "category" => "2", "name" => "abc", "number" => 723, "unit" => "kg" ],
-				// [ "category" => "3", "name" => "abc", "number" => 12, "unit" => "pcs" ],
-				// [ "category" => "4", "name" => "abc", "number" => 1, "unit" => "" ],
-				// [ "category" => "5", "name" => "abc", "number" => 1, "unit" => "" ],
-				// [ "category" => "6", "name" => "abc", "number" => 1, "unit" => "" ],
-			];
+			$this->lists["main"]["active"] = [];
 		}
 		if (!isset($this->lists["main"]["inactive"])) {
-			$this->lists["main"]["inactive"] = [
-				// [ "category" => "unfug", "name" => "abc", "number" => 1, "unit" => "" ],
-				// [ "category" => "getränke", "name" => "abc", "number" => 1, "unit" => "" ],
-				// [ "category" => "gemüse", "name" => "abc", "number" => 1, "unit" => "" ],
-				// [ "category" => "süßkram", "name" => "abc abc abc abc abc abc abc abc abc abc abc abc abc abc abc", "number" => 1, "unit" => "" ],
+			$this->lists["main"]["inactive"] = [];
+		}
+		if (!isset($this->lists["main"]["meta"])) {
+			$this->lists["main"]["meta"] = [
+				"changed" => time() * 1000
 			];
 		}
+
 
 		return true;
 	}
@@ -200,7 +201,7 @@ class Shoppinglist {
 				$entryKey = array_shift($actions);
 
 				// Edit entry
-				return $this->editItem($listName, $listType, $entryKey, $entry);
+				return $this->editItem($listName, $listType, $entryKey);
 			} else if ($numParts === 0) {
 				// Create new list
 				return $this->error(Errors::NYI_Create_List);
@@ -282,9 +283,10 @@ class Shoppinglist {
 		$originalItem = isset($this->lists[$listname][$listType][$entryKey]) ? $this->lists[$listname][$listType][$entryKey] : false;
 		if ($originalItem) {
 			if (
-				$receivedItem["category"] !== $originalItem["category"] &&
-				$receivedItem["name"]     !== $originalItem["name"] &&
-				$receivedItem["amount"]   !== $originalItem["amount"]
+				$receivedItem["category"] !== $originalItem["category"] ||
+				$receivedItem["name"]     !== $originalItem["name"] ||
+				$receivedItem["number"]   !== $originalItem["number"] ||
+				$receivedItem["unit"]   !== $originalItem["unit"]
 			) {
 				return $this->error(Errors::Invalid_Item, "Item Data Does Not Match");
 			}
@@ -294,12 +296,30 @@ class Shoppinglist {
 
 		return null;
 	}
+	public function findItem($listname, $listType, $item) {
+		foreach ($this->lists[$listname][$listType] as $key => $entry) {
+			if (
+				$item["category"] == $entry["category"] &&
+				$item["name"]     == $entry["name"] &&
+				$item["number"]   == $entry["number"] &&
+				$item["unit"]   == $entry["unit"]
+			) {
+				return $key;
+			}
+		}
+
+		return false;
+	}
 
 	public function removeItem($listname, $listType, $entryKey) {
 		$item = $this->getRequestBodyData();
 		$error = $this->compareItem($listname, $listType, $entryKey, $item);
 		if ($error !== null) {
-			return $error;
+			// Try finding the entry, it might have moved due to a request in between
+			$entryKey = $this->findItem($listName, $listType, $item);
+			if ($entryKey === false) {
+				return $error;
+			}
 		}
 
 		$originalItem = $this->lists[$listname][$listType][$entryKey];
@@ -316,7 +336,11 @@ class Shoppinglist {
 		$item = $this->getRequestBodyData();
 		$error = $this->compareItem($listName, $listType, $entryKey, $item);
 		if ($error !== null) {
-			return $error;
+			// Try finding the entry, it might have moved due to a request in between
+			$entryKey = $this->findItem($listName, $listType, $item);
+			if ($entryKey === false) {
+				return $error;
+			}
 		}
 
 		$originalItem = $this->lists[$listName][$listType][$entryKey];
@@ -335,7 +359,7 @@ class Shoppinglist {
 		return [ "status" => 200 ];
 	}
 
-	public function editItem($listName, $listType, $entryKey, $entry) {
+	public function editItem($listName, $listType, $entryKey) {
 		$item = $this->getRequestBodyData();
 
 		$error = $this->verifyEntry($item);
@@ -347,9 +371,7 @@ class Shoppinglist {
 		$this->lists[$listName][$listType][$entryKey]["category"] = $item["category"];
 		$this->lists[$listName][$listType][$entryKey]["number"] = $item["number"];
 		$this->lists[$listName][$listType][$entryKey]["unit"] = $item["unit"];
-		$this->saveList();
-
-		return [ "status" => 200 ];
+		return $this->saveList();
 	}
 
 	//////////////////////////////////// Private Methods ////////////////////////////////////
@@ -370,10 +392,12 @@ class Shoppinglist {
 			return $a["category"] > $b["category"] ? 1 : -1;
 		};
 
-		foreach ($this->lists as $key => $list) {
+		foreach ($this->lists as $key => &$list) {
 			usort($list["active"], $sortByCategory);
 			usort($list["inactive"], $sortByCategory);
 		}
+
+		$this->lists["main"]["meta"]["changed"] = time() * 1000;
 
 		$ok = file_put_contents($this->listFile, json_encode($this->lists), LOCK_EX);
 		if ($ok === false) {

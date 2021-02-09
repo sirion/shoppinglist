@@ -112,7 +112,7 @@ async function showElement(element) {
 	await nextFrame();
 
 	return new Promise(res => {
-		let timeout;
+		let timeout; // eslint-disable-line prefer-const
 		const done = () => {
 			clearTimeout(timeout);
 			element.removeEventListener("transitionend", done);
@@ -131,7 +131,7 @@ async function hideElement(element) {
 	await nextFrame();
 
 	return new Promise(res => {
-		let timeout;
+		let timeout; // eslint-disable-line prefer-const
 		const done = () => {
 			clearTimeout(timeout);
 			element.removeEventListener("transitionend", done);

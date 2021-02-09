@@ -225,7 +225,7 @@ export default class Dialog extends HTMLElement {
 				position: "absolute",
 				top: 0, left: 0, bottom: 0, right: 0,
 				"background-color": "rgba(66, 66, 66, 0.8)",
-				"z-index": Dialog._idCounter // TODO: Better solution needed
+				"z-index": Dialog._idCounter
 			});
 		}
 		this._blockLayer.append(this);

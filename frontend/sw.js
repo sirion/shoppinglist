@@ -1,7 +1,4 @@
 const cacheName = "v0";
-const maxAPICacheAge = 0;
-
-const cacheOpened = caches.open(cacheName);
 
 const cacheURIs = [
 	"/index.html",
@@ -19,6 +16,8 @@ const cacheURIs = [
 ];
 
 
+const cacheOpened = caches.open(cacheName);
+
 function onActivate() {
 	return caches.keys().then(keys => {
 		return Promise.all(keys.map(key => caches.delete(key)));
@@ -27,7 +26,7 @@ function onActivate() {
 	});
 }
 
-function onInstall(e) {
+function onInstall(/* e */) {
 	self.skipWaiting();
 
 	return cacheOpened.then(cache => {
@@ -106,8 +105,6 @@ self.addEventListener("fetch", e => {
 		e.respondWith(cachedRequest(e.request));
 	} else if (e.request.method === "GET") {
 		e.respondWith(cachedIfOffline(e.request));
-	} else {
-		return true;
 	}
 });
 

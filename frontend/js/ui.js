@@ -320,7 +320,6 @@ export default class UI extends EventTarget {
 	}
 
 	async resizeCategoryTexts() {
-		// TODO: Can this be done directly after creation?
 		const texts = this.dom.querySelectorAll(".categorytext");
 		for (let i = 0; i < texts.length; i++) {
 			const e = texts[i];

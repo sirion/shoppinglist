@@ -82,7 +82,7 @@ export default class Dialogs {
 
 		const numberLabel = dom.createElement("label", {
 			textContent: "Number",
-			for: "inputNumber",
+			for: "inputNumber"
 		});
 		const number = dom.createElement("input", {
 			id: "inputNumber",
@@ -98,7 +98,7 @@ export default class Dialogs {
 
 		const unitLabel = dom.createElement("label", {
 			textContent: "Unit",
-			for: "inputUnit",
+			for: "inputUnit"
 		});
 		const unit = dom.createElement("select", {
 			id: "inputUnit",

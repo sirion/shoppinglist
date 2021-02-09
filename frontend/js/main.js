@@ -18,8 +18,9 @@ async function registerServiceWorker() {
 
 	} catch (ex) {
 		console.error("Error registering service worker: " + ex.message);
-		return null;
 	}
+
+	return null;
 }
 
 (async () => {

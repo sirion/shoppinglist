@@ -26,8 +26,19 @@
 
 <link href="shoppinglist.webmanifest" rel="manifest">
 
+<link rel="modulepreload" href="js/main.js">
+<link rel="modulepreload" href="js/shoppinglist.js">
+<link rel="modulepreload" href="js/ui.js">
+<link rel="modulepreload" href="js/introduction.js">
+<link rel="modulepreload" href="js/dialogs.js">
+<link rel="modulepreload" href="js/dialog.js">
+<link rel="modulepreload" href="js/utils/domtools.js">
+<link rel="modulepreload" href="js/utils/filter.js">
+<link rel="preload" href="css/main.css" as="style">
+<link rel="preload" href="font/Oxanium-Medium.ttf" as="font" crossorigin="anonymous">
+
+
 <title>Shopping List</title>
 
 <link rel="stylesheet" href="css/main.css" />
-<script type="module" src="js/main.js"></script>
-<div id="list"></div>
+<script type="module" src="js/main.js" async></script>

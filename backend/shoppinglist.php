@@ -104,6 +104,9 @@ class Shoppinglist {
 	public function serve() {
 		$actions = isset($_REQUEST["action"]) ? explode("/", trim($_REQUEST["action"], "/")) : [];
 		$action = array_shift($actions);
+		if ($action === "api") {
+			$action = array_shift($actions);
+		}
 
 
 		if (!$this->loadList()) {

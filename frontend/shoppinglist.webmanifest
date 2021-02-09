@@ -9,6 +9,17 @@
 	"theme_color": "white",
 	"icons": [
 		{
+			"src": "img/basket-icon_512.png",
+			"sizes": "512x512",
+			"type": "image/png",
+			"purpose": "any maskable"
+		},
+		{
+			"src": "img/basket-icon_384.png",
+			"sizes": "384x384",
+			"type": "image/png"
+		},
+		{
 			"src": "img/basket-icon_192.png",
 			"sizes": "192x192",
 			"type": "image/png"

@@ -19,6 +19,10 @@ Either setup a "real" web server like apache or nginx, or use the integrated ser
 
 #### My Access Code Does Not Work
 
+see below
+
+#### Changes are not persisted, moving an item between active and inactive list triggers error
+
 Make sure the file `backend/data/list-[CODE].json` ("[CODE]" replaced with the access code) exists and is readable and
 writable by the user the webserver runs under. This is usually your user in development and another user (like "http"
 or "www-data") when installed on a shared server.

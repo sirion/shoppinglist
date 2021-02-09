@@ -72,6 +72,8 @@ class DOMTools {
 		for (const name in attributes) {
 			if (attributes[name] === undefined) {
 				continue;
+			} else if (name === "children") {
+				el.append(...attributes[name]);
 			} else if (Array.isArray(attributes[name])) {
 				// Mutiple sub elements of same type
 				attributes[name].forEach(attr => {
@@ -93,7 +95,7 @@ class DOMTools {
 				el.appendChild(attributes[name]);
 			} else if (typeof attributes[name] === "function") {
 				// Event callback
-				el.addEventListener(name, attributes[name]);
+				el.addEventListener(name, attributes[name], { passive: true });
 			} else if (typeof attributes[name] === "object") {
 				// Sub element
 				el.appendChild(DOMTools.createElement(name, attributes[name], namespace));

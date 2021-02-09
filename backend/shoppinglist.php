@@ -1,16 +1,18 @@
 <?php
+error_reporting(0); // Production
+// error_reporting(-1); // Debugging
 
 class Errors {
 
 	const Invalid_API         = [ "e01", "Invalid API Request", 400];
-	const Invalid_Body        = [ "e03", "Invalid Request Body", 400 ];
-	const Invalid_Delete      = [ "e05", "Invalid Delete Request", 400 ];
-	const List_Not_Found      = [ "e06", "List not Found", 404 ];
-	const Invalid_Access_Code = [ "e07", "Invalid Access Code", 401 ];
+	const Invalid_Body        = [ "e03", "Invalid Request Body", 400];
+	const Invalid_Item        = [ "e05", "Invalid Item Data", 400];
+	const List_Not_Found      = [ "e06", "List not Found", 404];
+	const Invalid_Access_Code = [ "e07", "Invalid Access Code", 401];
 
-	const NYI_Delete_List     = [ "e96", "Deleting lists is not possible", 500 ];
-	const NYI_Create_List     = [ "e97", "Creating lists is not possible", 500 ];
-	const NYI                 = [ "e98", "Not Yet Implemented", 500 ];
+	const NYI_Delete_List     = [ "e96", "Deleting lists is not possible", 500];
+	const NYI_Create_List     = [ "e97", "Creating lists is not possible", 500];
+	const NYI                 = [ "e98", "Not Yet Implemented", 500];
 }
 
 
@@ -36,6 +38,7 @@ class Shoppinglist {
 	//////////////////////////////////// Private Properties ////////////////////////////////////
 
 	private $listFile = null;
+	private $writable = false;
 
 	private $lists = [
 		"main" => [
@@ -66,6 +69,7 @@ class Shoppinglist {
 
 		if (file_exists($this->listFile)) {
 			$this->lists = json_decode(file_get_contents($this->listFile), true);
+			$this->writable = is_writable($this->listFile);
 		} else {
 			return false;
 		}
@@ -259,12 +263,16 @@ class Shoppinglist {
 
 
 	private function compareItem($listname, $listType, $entryKey, $receivedItem) {
+		if ($receivedItem === null) {
+			return $this->error(Errors::Invalid_Item, "No Item Data in Payload");
+		}
+
 		if (!isset($this->lists[$listname])) {
-			return $this->error(Errors::Invalid_Delete, "Item Not Found");
+			return $this->error(Errors::Invalid_Item, "Item Not Found");
 		}
 
 		if ($listType !== "active" && $listType !== "inactive") {
-			return $this->error(Errors::Invalid_Delete, "Invalid list type");
+			return $this->error(Errors::Invalid_Item, "Invalid list type");
 		}
 
 
@@ -275,10 +283,10 @@ class Shoppinglist {
 				$receivedItem["name"]     !== $originalItem["name"] &&
 				$receivedItem["amount"]   !== $originalItem["amount"]
 			) {
-				return $this->error(Errors::Invalid_Delete, "Item Data Does Not Match");
+				return $this->error(Errors::Invalid_Item, "Item Data Does Not Match");
 			}
 		} else {
-			return $this->error(Errors::Invalid_Delete, "Item Not Found");
+			return $this->error(Errors::Invalid_Item, "Item Not Found");
 		}
 
 		return null;
@@ -344,6 +352,13 @@ class Shoppinglist {
 	//////////////////////////////////// Private Methods ////////////////////////////////////
 
 	private function saveList() {
+		if (!$this->writable) {
+			return [
+				"status" => 401,
+				"message" => "No write access to list storage"
+			];
+		}
+
 		// TODO: Order List
 		$sortByCategory = function($a, $b) {
 			if ($a["category"] == $b["category"]) {
@@ -357,7 +372,15 @@ class Shoppinglist {
 			usort($list["inactive"], $sortByCategory);
 		}
 
-		file_put_contents($this->listFile, json_encode($this->lists));
+		$ok = file_put_contents($this->listFile, json_encode($this->lists), LOCK_EX);
+		if ($ok === false) {
+			// Error accessing storage file - most likely wrong access code
+			return [
+				"status" => 500,
+				"message" => "Error accessing list storage"
+			];
+		}
+		return [ "status" => 200 ];
 	}
 
 	private function error($error, $details = null) {
@@ -372,7 +395,7 @@ class Shoppinglist {
 			$err["details"] = $details;
 		}
 
-		$err["debug"] = debug_backtrace();
+		// $err["debug"] = debug_backtrace();
 
 		return $err;
 	}

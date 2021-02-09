@@ -2,6 +2,19 @@ import dom from "./utils/domtools.js";
 import Dialog from "./dialog.js";
 
 export default class Dialogs {
+	static async info(str, title = "") {
+		const text = dom.createElement("div", {
+			textContent: str,
+			style: {
+				"text-align": "center"
+			}
+		});
+		const dialog = Dialog.create(title, [text]);
+		dialog.type = "info";
+		dialog.showModal();
+		await dialog.closed;
+	}
+
 	static async entry(categories, units, entry = {}) {
 		const newOption = (message, e) => {
 			if (e.target.selectedOptions[0].value !== "<new>") {

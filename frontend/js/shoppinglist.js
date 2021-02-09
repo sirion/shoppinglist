@@ -265,7 +265,9 @@ class Shoppinglist {
 	}
 
 	async useAPI(method, payload, ...parts) {
-		const result = await fetch(this.apiPath + "/" + parts.join("/"), {
+		await this.lastRequestDone;
+
+		const fetched = fetch(this.apiPath + "/" + parts.join("/"), {
 			method: method,
 			headers: {
 				"X-Access-Code": this.accessCode,
@@ -274,22 +276,48 @@ class Shoppinglist {
 			body: payload ? JSON.stringify(payload) : undefined
 		});
 
-		if (result.status === 204) {
+		this.lastRequestDone = fetched.catch(() => {
+			this.lists.offline = true;
+			this.update();
+		});
+
+		const response = await fetched;
+
+		if (response.headers.get("X-From-Cache") === "true") {
+			this.lists.offline = true;
+			// Retry later
+			setTimeout(() => {
+				this.refreshData(true);
+			}, 60000);
+		} else {
+			this.lists.offline = false;
+		}
+
+		if (response.status === 204) {
 			return true;
 		}
-		return result.json();
-	}
 
-	getCategoryColor(category) {
-		if (!this.colors[category]) {
-			let hash = 4; // Random start
-			for (let i = 0; i < category.length; i++) {
-				hash = ((hash << 5) - hash) + category.charCodeAt(i);
-				hash = hash & hash; // Convert to 32bit integer
+		if (response.headers.get("Content-Type") !== "application/json") {
+			throw new Error(await response.text());
+		} else if (response.status >= 400) {
+			try {
+				const data = await response.json();
+				if (data.code === "e07") {
+					await Dialogs.info("Ungültiger Zugriffscode", "Fehler");
+					localStorage.removeItem("code");
+					location.reload();
+				} else {
+					await Dialogs.info(data.message, "Server Fehler");
+	}
+				return data;
+			} catch (ex) {
+				const text = await response.text();
+				await Dialogs.info(text, "Unbekannter Fehler");
+				return text;
 			}
-			this.colors[category] = "#" + hash.toString(16).substring(1, 7);
 		}
-		return this.colors[category];
+
+		return response.json();
 	}
 }
 

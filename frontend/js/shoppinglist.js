@@ -40,6 +40,10 @@ class Shoppinglist {
 			this.lists.addEventListener("activate", this.onSwitch.bind(this));
 			this.lists.addEventListener("deactivate", this.onSwitch.bind(this));
 			this.lists.addEventListener("refresh", this.onRefresh.bind(this));
+
+			window.addEventListener("online", () => { this.lists.offline = false; });
+			window.addEventListener("offline", () => { this.lists.offline = true; });
+
 		})();
 	}
 

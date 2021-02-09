@@ -1,29 +1,47 @@
-
-@media (hover: hover) {
-	:root {
-		--item-height: 24px;
-	}
-}
-@media (hover: none) and (orientation: landscape) {
-	:root {
-		--item-height: 24px;
-	}
-}
-@media (hover: none) and (orientation: portrait) {
-	:root {
-		--item-height: 24px;
-	}
+:root {
+	--item-height: 24px;
+	--num-width: calc(var(--item-height) * 1.75);
+	--cat-width: calc(var(--item-height) * 3.5);
+	--unit-width: calc(var(--item-height) * 1.25);
+	--gap-width: calc(var(--item-height) * 0.15);
 }
 
-
+@font-face {
+	font-family: Oxanium;
+	font-display: swap;
+	src: url(../font/Oxanium-Medium.ttf);
+	/* font-family: Comfortaa;
+	src: url(../font/Comfortaa-Medium.ttf); */
+	/* font-family: Caveat;
+	src: url(../font/Caveat-Medium.ttf); */
+}
 
 /***** General Page *****/
+
+* {
+	box-sizing: border-box;
+	outline-color: transparent;
+}
+
+*:not(input), *:focus:not(input) {
+	-webkit-touch-callout: none;
+	-webkit-user-select: none;
+	-khtml-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+}
+
 
 html, body {
 	box-sizing: border-box;
 	margin: 0;
 	padding: 0;
-	font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+	font-family: Oxanium;
+	font-display: block;
+	/* font-family: Comfortaa; */
+	/* font-family: Caveat; */
+	font-size: calc(var(--item-height) * 0.75);
 }
 
 body {
@@ -36,37 +54,66 @@ body {
 	background-color: #555;
 }
 
+#lists {
+	height: 92vh;
+}
+
+.indicator {
+	display: none;
+}
+
+.offline .indicatorOffline {
+	display: block;
+	cursor: pointer;
+	width: 10vmin;
+	height: 10vmin;
+	border: 1px dashed red;
+	border-radius: 6vmin;
+	position: fixed;
+	top: 1vmin;
+	right: 1vmin;
+	background-image: url(/img/offline.svg);
+	background-color: #e663;
+	background-position: center;
+	background-size: 75%;
+	background-repeat: no-repeat;
+}
+
 .list {
 	display: grid;
-	/* grid-template-columns:                  category            amountNum           amountUnit   name               button; */
-	grid-template-columns: calc(var(--item-height) * 5)   var(--item-height)   var(--item-height)   auto;   /* calc(var(--item-height) * 1.25) */;
-	grid-auto-rows: calc(var(--item-height) * 1.5);
-	row-gap: 0; /* calc(var(--item-height) / 3); */
-	column-gap: calc(var(--item-height) / 4);
-	align-items: center;
+	gap: 0.5rem 0;
 	user-select: none;
+	padding: 0.5rem;
 }
 
 .list > div {
-	align-items: center;
+	display: grid;
 
+	/*                             category          amountNum          amountUnit   name               button; */
+	grid-template-columns: var(--cat-width)   var(--num-width)   var(--unit-width)   auto;   /* calc(var(--item-height) * 1.25) */;
+
+	align-items: center;
 	cursor: pointer;
+	column-gap: var(--gap-width);
 }
 
 
 /***** Items *****/
 
 .category {
+	width: var(--cat-width);
+	height: 1.5rem;
 	border: 5px solid transparent;
 	border-color: rgba(255, 255, 255, 0.25);
 	border-radius: calc(var(--item-height) / 3 * 2);
 	white-space: nowrap;
-	margin-left: calc(var(--item-height) * 0.25);
-	margin-right: calc(var(--item-height) * 0.5);
+	display: flex;
+	overflow: hidden;
+	justify-content: center;
+	align-items: center;
 }
 
 .category > div {
-	height: inherit;
 	background: inherit;
 	-webkit-background-clip: text;
 	background-clip: text;
@@ -77,12 +124,17 @@ body {
 
 
 .amountNum {
-	/* font-family: monospace;
-	font-size: 0.8em; */
-	justify-self: right;
+	width: var(--num-width);
+	text-align: right;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	overflow: hidden;
+	direction: rtl;
 }
 
+
 .amountUnit {
+	width: var(--unit-width);
 	justify-self: left;
 }
 
@@ -91,6 +143,20 @@ body {
 	white-space: nowrap;
 	overflow: hidden;
 	width: 99%;
+}
+
+/* .inactiveEntry {
+	text-decoration: line-through;
+} */
+.inactiveEntry::after {
+	content: "";
+	display: block;
+	width: calc(100vw - var(--cat-width) - var(--gap-width) * 3 - 1.5rem);
+	height: 1px;
+	background-color: white;
+	position: relative;
+	left: calc(var(--cat-width) + 4 * var(--gap-width));
+	top: -0.85rem;
 }
 
 .action {
@@ -153,23 +219,34 @@ body {
 
 .controls {
 	position: absolute;
-	width: 10vmin;
-	height: 10vmin;
-	right: 2vmin;
-	bottom: 2vmin;
+	width: 100vw;
+	height: 8vh;
+	right: 0;
+	bottom: 0;
+	padding: 1vmin;
+	gap: 1vmin;
 
 	border: 0px dashed black;
 }
 
-.controls > svg {
+.controls > .button {
 	background-color: #fff4;
 	border-radius: 60%;
 	stroke: #eee;
-	stroke-width: 5px;
 	stroke-linecap: round;
 	box-shadow: #444 3px 3px 7px;
+	width: calc(8vh - 2vmin);
+	height: calc(8vh - 2vmin);
 }
 
 .controls.open {
 	height: 30vmin;
+}
+
+/***** Dialogs *****/
+
+label.mandatory::after {
+	content: "*";
+	font-size: 0.6em;
+	vertical-align: top;
 }

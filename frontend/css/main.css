@@ -3,7 +3,7 @@
 	--num-width: calc(var(--item-height) * 1.75);
 	--cat-width: calc(var(--item-height) * 3.5);
 	--unit-width: calc(var(--item-height) * 1.25);
-	--gap-width: calc(var(--item-height) * 0.15);
+	--gap-width: calc(var(--item-height) * 0.1);
 }
 
 @font-face {
@@ -55,7 +55,7 @@ body {
 }
 
 #lists {
-	height: 92vh;
+	padding-bottom: 8vh;
 }
 
 .indicator {
@@ -81,7 +81,7 @@ body {
 
 .list {
 	display: grid;
-	gap: 0.5rem 0;
+	gap: 0.25rem 0;
 	user-select: none;
 	padding: 0.5rem;
 }
@@ -136,6 +136,11 @@ body {
 .amountUnit {
 	width: var(--unit-width);
 	justify-self: left;
+	overflow: hidden;
+}
+
+.amountUnitText {
+	transform-origin: left;
 }
 
 .name {
@@ -218,7 +223,7 @@ body {
 /***** Menu and Controls *****/
 
 .controls {
-	position: absolute;
+	position: fixed;
 	width: 100vw;
 	height: 8vh;
 	right: 0;
@@ -226,6 +231,7 @@ body {
 	padding: 1vmin;
 	gap: 1vmin;
 
+	z-index: 1;
 	border: 0px dashed black;
 }
 
@@ -239,10 +245,6 @@ body {
 	height: calc(8vh - 2vmin);
 }
 
-.controls.open {
-	height: 30vmin;
-}
-
 /***** Dialogs *****/
 
 label.mandatory::after {
@@ -250,3 +252,60 @@ label.mandatory::after {
 	font-size: 0.6em;
 	vertical-align: top;
 }
+
+/* .menu {} */
+
+.menu .button, .menu select {
+	display: flex;
+	justify-content: flex-start;
+	align-items: center;
+
+	gap: 0.5em;
+	min-width: 2.5em;
+
+	border: 1px solid white;
+	background-color: white;
+	outline: none;
+	white-space: nowrap;
+
+	border-radius: 4px;
+	box-shadow: 0px 0px 5px #aaa;
+}
+
+.menu > * {
+	text-overflow: ellipsis;
+	overflow: hidden;
+
+	white-space: nowrap;
+	background-color: transparent;
+}
+
+.menu > .double {
+	height: 4em;
+}
+
+.menu > .listcontrol {
+	display: grid;
+	grid-template-areas: "x x" "a b";
+	grid-template-rows: 1fr 1fr;
+	justify-content: stretch;
+    align-items: flex-end;
+	gap: 0.25em;
+}
+
+.menu > .listcontrol .selector {
+	grid-area: x;
+	justify-self: stretch;
+	align-self: stretch;
+}
+
+
+.menu > .listcontrol .share {
+	grid-area: a;
+}
+
+.menu > .listcontrol .remove {
+	grid-area: b;
+}
+
+

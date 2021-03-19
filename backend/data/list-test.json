@@ -1,44 +1,72 @@
 {
-	"main": {
-		"active": [
-			{
-				"category": "Getr\u00e4nke",
-				"name": "Alpro Soja Vanille",
-				"number": 3,
-				"unit": ""
-			},
-			{
-				"category": "Getr\u00e4nke",
-				"name": "Apfelsaft",
-				"number": 2,
-				"unit": ""
-			},
-			{
-				"category": "Gem\u00fcse",
-				"name": "Lauch",
-				"number": 1,
-				"unit": ""
-			}
-		],
-		"inactive": [
-			{
-				"category": "Haushalt",
-				"name": "M\u00fcllbeutel (25l)",
-				"number": 1,
-				"unit": ""
-			},
-			{
-				"category": "S\u00fc\u00dfkram",
-				"name": "Schokolade",
-				"number": 500,
-				"unit": "g"
-			},
-			{
-				"category": "Getr\u00e4nke",
-				"name": "Alpro Soja Schokolade",
-				"number": 1,
-				"unit": ""
-			}
-		]
-	}
+	"active": [
+		{
+			"category": "Unverpackt ",
+			"name": "Sp\u00fclmittel",
+			"number": 1,
+			"unit": "",
+			"changed": 1616083372000
+		},
+		{
+			"category": "Unverpackt ",
+			"name": "Klopapier",
+			"number": 3,
+			"unit": "",
+			"changed": 1616083372000
+		}
+	],
+	"inactive": [
+		{
+			"category": "Penny",
+			"name": "Bolognese-Fix",
+			"number": 1,
+			"unit": ""
+		},
+		{
+			"category": "Penny",
+			"name": "vegane Patties",
+			"number": 1,
+			"unit": ""
+		},
+		{
+			"category": "Penny",
+			"name": "Veganes Hack",
+			"number": 2,
+			"unit": ""
+		},
+		{
+			"category": "Unverpackt ",
+			"name": "Schokolade",
+			"number": 1,
+			"unit": ""
+		},
+		{
+			"category": "Unverpackt ",
+			"name": "Fruchtgummi",
+			"number": 1,
+			"unit": ""
+		}
+	],
+	"meta": {
+		"name": "Test List DEV01",
+		"changed": 1616090992000
+	},
+	"categories": [
+		{
+			"name": "ffdgdf",
+			"color": "#0042a9",
+			"default": true
+		},
+		{
+			"name": "Penny",
+			"color": "#e22400",
+			"default": false
+		},
+		{
+			"name": "Unverpackt ",
+			"color": "#2b732b",
+			"default": false
+		}
+	],
+	"units": []
 }

@@ -5,8 +5,8 @@
 	"display": "standalone",
 	"orientation": "portrait",
 	"start_url": "/",
-	"background_color": "white",
-	"theme_color": "white",
+	"background_color": "#dfdbea",
+	"theme_color": "#dfdbea",
 	"icons": [
 		{
 			"src": "img/basket-icon_512.png",

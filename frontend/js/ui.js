@@ -1,6 +1,7 @@
 import dom from "./utils/domtools.js";
 import Dialogs from "./dialogs.js";
 import Filter from "./utils/filter.js";
+import Dialog from "./dialog.js";
 
 
 function sortByCategory(a, b) {
@@ -23,16 +24,83 @@ export default class UI extends EventTarget {
 	get inactive() {
 		return this._inactive;
 	}
-	set inactive(active) {
-		this._inactive = active.slice();
+	set inactive(inactive) {
+		this._inactive = inactive.slice();
 		this.queueUpdate();
 	}
 
-	get colors() {
-		return this._colors;
+	get categories() {
+		return this._savedCategories.concat(this.listCategories);
 	}
-	set colors(colors) {
-		this._colors = colors ?? {};
+
+	get savedCategories() {
+		return this._savedCategories;
+	}
+	set savedCategories(categories) {
+		this._savedCategories = categories ?? [];
+	}
+
+	get listCategories() {
+		const categoryNames = {};
+		this._savedCategories.forEach(c => {
+			categoryNames[c.name] = true;
+			if (c.default) {
+				this.defaultCategory = c;
+			}
+		});
+
+		return Filter.propertyUnique({
+			removeEmpty: true,
+			property: "category"
+		}, this._active, this._inactive).filter(n => {
+			return !categoryNames[n];
+		}).map(n =>{
+			return {
+				name: n,
+				color: this.createCategoryColor(n),
+				default: false,
+				list: true
+			};
+		});
+	}
+
+
+	get units() {
+		return this._savedUnits.concat(this.listUnits);
+	}
+
+	get savedUnits() {
+		return this._savedUnits;
+	}
+	set savedUnits(units) {
+		this._savedUnits = units ?? [];
+	}
+
+	get listUnits() {
+		const unitNames = {};
+		this._savedUnits.forEach(u => {
+			unitNames[u.name] = true;
+			if (u.default) {
+				this.defaultUnit = u;
+			}
+		});
+
+		return Filter.propertyUnique({
+			removeEmpty: true,
+			property: "unit"
+		}, this._active, this._inactive).filter(n => {
+			return !unitNames[n];
+		}).map(n =>{
+			return { name: n, default: false, list: true };
+		});
+	}
+
+	get lists() {
+		return this._lists;
+	}
+	set lists(lists) {
+		this._lists = Object.assign({}, lists);
+		this.queueUpdate();
 	}
 
 	get cached() {
@@ -58,11 +126,14 @@ export default class UI extends EventTarget {
 
 		this._active = [];
 		this._inactive = [];
-		this.categories = [];
-		this.units = [];
-		this._colors = {};
+		this._categories = [];
+		this._units = [];
+		this._lists = [];
 
-		this._preventDefault = e => e.preventDefault();
+		this.categoryColors = {};
+		this.currentList = null;
+		this.defaultUnit = null;
+		this.defaultCategory = null;
 
 		this.init();
 	}
@@ -81,7 +152,11 @@ export default class UI extends EventTarget {
 	}
 
 	async createEntry(inactive = false) {
-		const entry = await Dialogs.entry(this.categories, this.units);
+		const entry = await Dialogs.entry(this.categories, this.units, {
+			number: "1",
+			unit: this.defaultUnit,
+			category: this.defaultCategory
+		});
 		if (entry) {
 			await this.addEntry(entry, inactive);
 			return true;
@@ -91,14 +166,16 @@ export default class UI extends EventTarget {
 
 	async changeEntry(entryNumber, inactive = false) {
 		const list = inactive ? this._inactive : this._active;
-		const changed = await Dialogs.entry(this.categories, this.units, list[entryNumber]);
+		const old = Object.assign({}, list[entryNumber]);
+		const changed = await Dialogs.entry(this.categories, this.units, old);
 
 		if (changed) {
 			this._active.splice(entryNumber, 1, changed);
 			await this.update();
 
 			this.emit("change", {
-				entry: changed,
+				old: old,
+				new: changed,
 				active: !inactive,
 				entryNumber: entryNumber
 			});
@@ -130,6 +207,23 @@ export default class UI extends EventTarget {
 	}
 
 	init() {
+		// START - DEBUG: REMOVE ME
+		// const showVersion = async () => {
+		// 	const versioninfo = document.querySelector("versionInfo") ?? dom.createElement("div");
+		// 	Object.assign(versioninfo.style, {
+		// 		top: 0, right: 0, "background-color": "pink", position: "fixed"
+		// 	});
+		// 	const res = await fetch("sw.js");
+		// 	const text = await res.text();
+		// 	const regVersion = /"(.*?)"/;
+		// 	const matched = regVersion.exec(text);
+		// 	versioninfo.textContent = matched[1];
+
+		// 	document.body.append(versioninfo);
+		// };
+		// showVersion();
+		// END   - DEBUG: REMOVE ME
+
 		this.initZoom();
 
 		Object.assign(this.dom.style, {
@@ -138,11 +232,14 @@ export default class UI extends EventTarget {
 		});
 
 		this.dom.addEventListener("contextmenu", this._preventDefault); // Prevent contextmenu on long press
+		this.dom.addEventListener("scroll", this.onScroll.bind(this));
 
 		const onAction = this.onAction.bind(this);
 		const createEntry = this.createEntry.bind(this, false);
 		const zoomIn = this.zoom.bind(this, true);
 		const zoomOut = this.zoom.bind(this, false);
+		const showMenu = this.showMenu.bind(this);
+
 
 		this.indicatorOffline = dom.createElement("div", {
 			class: "indicatorOffline",
@@ -176,19 +273,21 @@ export default class UI extends EventTarget {
 			class: "controls",
 			style: {
 				display: "grid",
-				"grid-template-areas": "'l1 l2 s r'",
-				"grid-template-columns": "min-content min-content auto min-content"
+				gridTemplateAreas: "'l1 l2 s1 m s3 r'",
+				gridTemplateColumns: "min-content min-content auto min-content auto min-content",
+				"background-color": "#555",
+				"z-index": "1"
 			},
 			svg: [{
 				class: "button zoomIn",
 				style: {
-					"grid-area": "l1"
+					gridArea: "l1"
 				},
 				click: zoomIn,
 				version: "1.1",
 				viewBox: "0 0 100 100",
 				preserveAspectRatio: "none",
-				"stroke-width": "2px",
+				"stroke-width": "5px",
 				line: [{
 					x1: "50", y1: "35", x2: "50", y2: "65"
 				}, {
@@ -197,20 +296,37 @@ export default class UI extends EventTarget {
 			}, {
 				class: "button zoomOut",
 				style: {
-					"grid-area": "l2"
+					gridArea: "l2"
 				},
 				click: zoomOut,
 				version: "1.1",
 				viewBox: "0 0 100 100",
 				preserveAspectRatio: "none",
-				"stroke-width": "2px",
+				"stroke-width": "5px",
 				line: [{
 					x1: "35", y1: "50", x2: "65", y2: "50"
 				}]
 			}, {
+				class: "button showMenu",
+				style: {
+					gridArea: "m"
+				},
+				click: showMenu,
+				version: "1.1",
+				viewBox: "0 0 100 100",
+				preserveAspectRatio: "none",
+				"stroke-width": "5px",
+				line: [{
+					x1: "20", y1: "30", x2: "80", y2: "30"
+				}, {
+					x1: "20", y1: "50", x2: "80", y2: "50"
+				}, {
+					x1: "20", y1: "70", x2: "80", y2: "70"
+				}]
+			}, {
 				class: "button add",
 				style: {
-					"grid-area": "r"
+					gridArea: "r"
 				},
 				click: createEntry,
 				version: "1.1",
@@ -249,35 +365,29 @@ export default class UI extends EventTarget {
 	async update() {
 		this.dom.style.display = "block";
 
-		this.categories = Filter.propertyUnique({
-			start: this.categories,
-			removeEmpty: true,
-			property: "category"
-		}, this._active, this._inactive);
-		this.units = Filter.propertyUnique({
-			start: this.units,
-			removeEmpty: true,
-			property: "unit"
-		}, this._active, this._inactive);
-
 		this._active.sort(sortByCategory);
 		this._inactive.sort(sortByCategory);
 
-		dom.clearElement(this.activeList);
-		this._active.forEach(this.creatEntry.bind(this, "active", this.activeList));
-		dom.clearElement(this.inactiveList);
-		this._inactive.forEach(this.creatEntry.bind(this, "inactive", this.inactiveList));
+		this.categoryColors = {};
+		this.categories.forEach(cat => {
+			this.categoryColors[cat.name] = cat.color;
+		});
 
-		this.resizeCategoryTexts(); // No await - do resize asynchronously
+		dom.clearElement(this.activeList);
+		this._active.forEach(this.listEntry.bind(this, "active", this.activeList));
+		dom.clearElement(this.inactiveList);
+		this._inactive.forEach(this.listEntry.bind(this, "inactive", this.inactiveList));
+
+		this.resizeVariableTexts(); // No await - do resize asynchronously
 	}
 
-	creatEntry(classPrefix, list, data, i) {
+	listEntry(classPrefix, list, data, i) {
 		list.appendChild(dom.createElement("div", {
 			class: classPrefix + "Entry",
 			div: [{
 				class: "category category-" + data.category,
 				style: {
-					"background-color": this.getCategoryColor(data.category)
+					"background-color": this.categoryColors[data.category]
 				},
 				div: {
 					class: "categorytext",
@@ -291,8 +401,12 @@ export default class UI extends EventTarget {
 				"data-entry": i
 			}, {
 				class: "amountUnit",
-				textContent: data.unit,
-				"data-entry": i
+				"data-entry": i,
+				div: {
+					class: "amountUnitText",
+					"data-entry": i,
+					textContent: data.unit
+				}
 			}, {
 				class: "name",
 				textContent: data.name,
@@ -302,34 +416,54 @@ export default class UI extends EventTarget {
 		}));
 	}
 
-	getCategoryColor(category) {
-		if (!this._colors[category]) {
-			const rgb = [ 0, 0, 0 ];
-			const input = btoa(category);
-			for (let i = 0; i < input.length; i++) {
-				const n = i % 3;
-				rgb[n] = ((rgb[n] << 5) - rgb[n]) + input.charCodeAt(i);
-			}
-
-			rgb[0] = rgb[0] % 256;
-			rgb[1] = rgb[1] % 256;
-			rgb[2] = rgb[2] % 256;
-			this._colors[category] = `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
+	createCategoryColor(category) {
+		const rgb = [ 0, 0, 0 ];
+		const input = btoa(category);
+		for (let i = 0; i < input.length; i++) {
+			const n = i % 3;
+			rgb[n] = ((rgb[n] << 5) - rgb[n]) + input.charCodeAt(i);
 		}
-		return this._colors[category];
+
+		let color = (
+			Math.abs((rgb[0] % 256) * 256 * 256) +
+			Math.abs((rgb[1] % 256) * 256) +
+			Math.abs(rgb[2] % 256)
+		).toString(16);
+
+		while (color.length < 6) {
+			color = "0" + color;
+		}
+
+		return "#" + color;
 	}
 
-	async resizeCategoryTexts() {
-		const texts = this.dom.querySelectorAll(".categorytext");
+	async resizeVariableTexts() {
+		let texts;
+
+		// Categories
+		texts = this.dom.querySelectorAll(".categorytext");
 		for (let i = 0; i < texts.length; i++) {
 			const e = texts[i];
-			const width = e.parentElement.clientWidth * 0.9;
+			const width = e.parentElement.clientWidth;
 
-			let size = 1;
-			while(size > 0.25 && e.getBoundingClientRect().width > width) {
-				size = size * 0.95;
-				e.style["font-size"] = Math.round(size * 100) / 100 + "em";
-				await Promise.resolve();
+			const targetScale =  Math.round(width / e.scrollWidth * 95) / 100;
+			if (targetScale < 1) {
+				e.style["transform"] = `scale(${targetScale})`;
+			}
+		}
+
+		// Units
+		texts = this.dom.querySelectorAll(".amountUnitText");
+		for (let i = 0; i < texts.length; i++) {
+			const e = texts[i];
+			if (e.textContent === "") {
+				continue;
+			}
+			const width = e.parentElement.clientWidth;
+
+			const targetScale =  Math.round(width / e.scrollWidth * 95) / 100;
+			if (targetScale < 1) {
+				e.style["transform"] = `scale(${targetScale})`;
 			}
 		}
 	}
@@ -353,6 +487,267 @@ export default class UI extends EventTarget {
 		localStorage.setItem("item-height", size);
 	}
 
+	async sendFeedback() {
+		const message = await Dialogs.input({
+			title: "Fehler melden",
+			style: {
+				width: "80vw",
+				height: "45vh"
+			},
+			singleline: false,
+			cancelable: true
+		});
+
+		if (message) {
+			this.emit("feedback", { message: message });
+		}
+	}
+
+	async editCategories() {
+		const categories = await Dialogs.categories(this.savedCategories, this.listCategories);
+		if (categories) {
+			this.savedCategories = categories;
+			this.emit("categoryChange");
+			this.update();
+		}
+	}
+
+	async editUnits() {
+		const savedUnits = await Dialogs.units(this.savedUnits, this.listUnits);
+		if (savedUnits) {
+			this.savedUnits = savedUnits;
+			this.emit("unitChange");
+		}
+	}
+
+	async showMenu() {
+		let dialog; // eslint-disable-line
+
+		const layout = dom.createElement("div", {
+			class: "menu",
+			style: {
+				"display": "grid",
+				"margin": "3vw",
+				"gap": "1em",
+				"min-width": "80vw",
+				"grid-template-areas":
+					"'a a' " +
+					"'b1 b2' " +
+					"'c c' " +
+					"'d d' " +
+					"'sep sep' " +
+					"'e e' " +
+					"'f f' " +
+					"'sep2 sep2' " +
+					"'z1 z2'",
+				"grid-template-columns": "1fr 1fr",
+				"grid-template-rows": "2em 2em 2em 2em 0.5em 2em 2em 0.5em 2em",
+				"justify-items": "stretch",
+				"align-items": "stretch"
+			}
+		});
+
+
+		const listSelect = dom.createElement("select", {
+			class: "selector",
+			style: {
+				"grid-area": "a"
+			},
+			change: e => {
+				const code = e.target?.selectedOptions?.[0]?.value;
+				if (code) {
+					dialog.close();
+					this.emit("switchList", { code: code });
+				}
+			},
+			option: Object.entries(this.lists).map(e => {
+				return {
+					value: e[0],
+					textContent: e[1],
+					selected: e[0] === this.currentList
+				};
+			}),
+			disabled: Object.keys(this.lists).length <= 1
+		});
+
+		const addButton = dom.createElement("button", {
+			class: "button add",
+			style: {
+				"grid-area": "c"
+			},
+			div: [{
+				textContent: "➕"
+			}, {
+				textContent: "Hinzufügen"
+			}],
+			click: () => {
+				dialog.close();
+				this.emit("addList");
+			}
+		});
+
+		const createButton = dom.createElement("button", {
+			class: "button create",
+			style: {
+				"grid-area": "d"
+			},
+			div: [{
+				textContent: "🆕"
+			}, {
+				textContent: "Erstellen"
+			}],
+			click: () => {
+				dialog.close();
+				this.emit("createList");
+			}
+		});
+
+		const shareButton = dom.createElement("button", {
+			class: "button share",
+			style: {
+				"grid-area": "b1"
+			},
+			div: [{
+				textContent: "📤"
+			}, {
+				textContent: "Teilen"
+			}],
+			click: () => {
+				const code = listSelect?.selectedOptions?.[0]?.value;
+				const title = listSelect?.selectedOptions?.[0]?.textContent;
+
+				dialog.close();
+
+				// navigator.share must be called during a user initiated event, so we have to do it here :-/
+				const shareOptions = {
+					title: `Shoppinglist - ${title}`,
+					text: `Geteilte Einkaufsliste: " ${title}" \n\n(Zugriffscode: "${code}")`,
+					url: `${location.protocol}//${location.host}${location.pathname}?code=${code}`
+				};
+				if (navigator.canShare && navigator.canShare(shareOptions)) {
+					navigator.share(shareOptions);
+				} else {
+					this.emit("shareList", {
+						code: code,
+						title: title
+					});
+				}
+			}
+		});
+
+		const removeButton = dom.createElement("button", {
+			class: "button remove",
+			style: {
+				"grid-area": "b2"
+			},
+			div: [{
+				textContent: "🗑️"
+			}, {
+				textContent: "Entfernen"
+			}],
+			click: () => {
+				dialog.close();
+				this.emit("removeList", {
+					code: listSelect?.selectedOptions?.[0]?.value,
+					title: listSelect?.selectedOptions?.[0]?.textContent
+				});
+			}
+		});
+
+		const separator = dom.createElement("hr", {
+			style: {
+				"grid-area": "sep",
+				"align-self": "center",
+				"height": "2px",
+				"width": "80%"
+			}
+		});
+
+		const categories = dom.createElement("button", {
+			class: "button categories",
+			style: {
+				"grid-area": "e"
+			},
+			div: [{
+				textContent: "🗃"
+			}, {
+				textContent: "Kategorien"
+			}],
+			click: this.editCategories.bind(this)
+		});
+
+		const units = dom.createElement("button", {
+			class: "button units",
+			style: {
+				"grid-area": "f"
+			},
+			div: [{
+				textContent: "⚖"
+			}, {
+				textContent: "Einheiten"
+			}],
+			click: this.editUnits.bind(this)
+		});
+
+		const separator2  = dom.createElement("hr", {
+			style: {
+				"grid-area": "sep2",
+				"align-self": "center",
+				"height": "2px",
+				"width": "80%"
+			}
+		});
+
+
+		const feedback = dom.createElement("button", {
+			class: "button feedback",
+			style: {
+				"grid-area": "z1"
+			},
+			div: [{
+				textContent: "😤"
+			}, {
+				textContent: "Feedback"
+			}],
+			click: this.sendFeedback.bind(this)
+		});
+
+		const about = dom.createElement("div", {
+			textContent: "Über",
+			click: async () => { dialog.close(); await Dialogs.about(); },
+			style: {
+				"grid-area": "z2",
+				"display": "flex",
+				"justify-content": "flex-end",
+				"align-items": "flex-end",
+				"box-shadow": "none",
+				"font-size": "0.75em"
+			}
+		});
+
+
+		layout.append(
+			listSelect,
+			shareButton, removeButton,
+			addButton,
+			createButton,
+			separator,
+			categories,
+			units,
+			separator2,
+			feedback,
+			about
+		);
+
+
+		dialog = Dialog.create(null, [ layout ]);
+		dialog.type = "none";
+		dialog.blocklayerCloses = true;
+		dialog.background = "#ccc";
+		dialog.showModal();
+		await dialog.closed;
+	}
+
 	getCurrentEntryNumber(event) {
 		let element = event.target;
 
@@ -361,7 +756,12 @@ export default class UI extends EventTarget {
 			element = document.elementFromPoint(touch.clientX, touch.clientY);
 		}
 
-		return element.dataset?.entry;
+		return element?.dataset?.entry;
+	}
+
+	onScroll() {
+		clearTimeout(this._logActionTimeout);
+		this.longAction = false;
 	}
 
 	onAction(event) {
@@ -431,6 +831,11 @@ export default class UI extends EventTarget {
 
 
 		const entryNumber = this.getCurrentEntryNumber(event);
+		if (entryNumber === false) {
+			clearTimeout(this._logActionTimeout);
+			this.longAction = false;
+			return;
+		}
 		if (event.type === "touchstart" || event.type === "mousedown") {
 			if (entryNumber === undefined) {
 				// Selection on margins
@@ -484,5 +889,8 @@ export default class UI extends EventTarget {
 
 	}
 
+	_preventDefault(e) {
+		e.preventDefault();
+	}
 
 }

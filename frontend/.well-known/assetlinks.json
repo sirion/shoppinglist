@@ -1,0 +1,25 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "net.himmelrath.shoppinglist",
+    "sha256_cert_fingerprints":
+    ["D0:CD:FD:AB:25:82:91:6C:0C:74:CA:A7:09:FE:DC:EB:AB:24:44:6D:13:D4:51:9B:84:30:0C:D2:AB:3F:AC:5B"]
+  }
+},
+{
+  "relation": ["delegate_permission/common.get_login_creds"],
+  "target": {
+    "namespace": "web",
+    "site": "https://shoppinglist.himmelrath.net"
+  }
+},
+{
+  "relation": ["delegate_permission/common.get_login_creds"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "net.himmelrath.shoppinglist",
+    "sha256_cert_fingerprints":
+    ["D0:CD:FD:AB:25:82:91:6C:0C:74:CA:A7:09:FE:DC:EB:AB:24:44:6D:13:D4:51:9B:84:30:0C:D2:AB:3F:AC:5B"]
+  }
+}]

@@ -77,7 +77,7 @@ class DOMTools {
 			} else if (Array.isArray(attributes[name])) {
 				// Mutiple sub elements of same type
 				attributes[name].forEach(attr => {
-					el.appendChild(DOMTools.createElement(name, attr, namespace));
+					el.appendChild(attr instanceof Node ? attr : DOMTools.createElement(name, attr, namespace));
 				});
 			} else if (attributes[name] === null) {
 				// Text node
@@ -85,11 +85,12 @@ class DOMTools {
 			} else if (name === "textContent") {
 				// Text node
 				el.textContent = attributes[name];
+			} else if (name === "dataset") {
+				// Data attributes
+				Object.assign(el.dataset, attributes[name]);
 			} else if (name === "style") {
 				// Styles
-				Object.keys(attributes[name]).forEach(key => {
-					el.style[key] = attributes[name][key];
-				});
+				Object.assign(el.style, attributes[name]);
 			} else if (attributes[name] instanceof Element) {
 				// Just add the already created element
 				el.appendChild(attributes[name]);

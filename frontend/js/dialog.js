@@ -13,11 +13,15 @@ export default class Dialog extends HTMLElement {
 
 		dialog.closed = new Promise((resolve /*, reject */) => {
 			dialog.addEventListener("ok", () => {
-				dialog.close();
 				resolve(true);
+				dialog.close();
 			});
 			dialog.addEventListener("cancel", () => {
+				resolve(false);
 				dialog.close();
+			});
+			dialog.addEventListener("close", () => {
+				// In case dialog is closed without ok or cancel event, handle like cancel
 				resolve(false);
 			});
 		});
@@ -45,6 +49,10 @@ export default class Dialog extends HTMLElement {
 			footer: null
 		};
 
+		this._gridTemplateRows = [ "2rem", "auto", "2rem" ];
+
+		this.blocklayerCloses = false;
+
 		this._initDom();
 	}
 
@@ -61,33 +69,66 @@ export default class Dialog extends HTMLElement {
 		}
 		switch (type) {
 		case "confirm":
+			this._dom.footer.style.display = "flex";
 			this._dom.btnOk.style.display = "block";
 			this._dom.btnOk.textContent = "Ok";
 
 			this._dom.btnCancel.style.display = "block";
-			this._dom.btnCancel.textContent = "Cancel";
+			this._dom.btnCancel.textContent = "Abbrechen";
 
+			this._gridTemplateRows[2] = "2rem";
+			break;
+
+		case "save":
+			this._dom.footer.style.display = "flex";
+			this._dom.btnOk.style.display = "block";
+			this._dom.btnOk.textContent = "Speichern";
+
+			this._dom.btnCancel.style.display = "none";
+			this._dom.btnCancel.textContent = "";
+
+			this._gridTemplateRows[2] = "2rem";
 			break;
 
 		case "ok":
+			this._dom.footer.style.display = "flex";
 			this._dom.btnOk.style.display = "block";
 			this._dom.btnOk.textContent = "Ok";
 
 			this._dom.btnCancel.style.display = "none";
 			this._dom.btnCancel.textContent = "";
+
+			this._gridTemplateRows[2] = "2rem";
 			break;
+
+		case "none":
+			this._dom.footer.style.display = "flex";
+			this._dom.btnOk.style.display = "none";
+			this._dom.btnOk.textContent = "";
+
+			this._dom.btnCancel.style.display = "none";
+			this._dom.btnCancel.textContent = "";
+
+			this._gridTemplateRows[2] = "0";
+			break;
+
 
 		default:
 			console.error("[Dialog] Invalid dialog type set.");
 			// fall through
 		case "info":
+			this._dom.footer.style.display = "flex";
 			this._dom.btnOk.style.display = "block";
-			this._dom.btnOk.textContent = "Close";
+			this._dom.btnOk.textContent = "Schließen";
 
 			this._dom.btnCancel.style.display = "none";
 			this._dom.btnCancel.textContent = "";
+
+			this._gridTemplateRows[2] = "2rem";
 			break;
 		}
+
+		this.style["grid-template-rows"] = this._gridTemplateRows.join(" ");
 	}
 
 
@@ -97,6 +138,18 @@ export default class Dialog extends HTMLElement {
 
 	set title(title) {
 		this._dom.header.textContent = title;
+		this._dom.header.style.display = title ? "block" : "none";
+
+		this._gridTemplateRows[0] = title ? "2rem" : "0";
+		this.style["grid-template-rows"] = this._gridTemplateRows.join(" ");
+	}
+
+	get background() {
+		return this.style.background;
+	}
+
+	set background(background) {
+		this.style.background = background;
 	}
 
 	////////////////////////////////////////////////// Public Methods /////////////////////////////////////////////////
@@ -142,7 +195,7 @@ export default class Dialog extends HTMLElement {
 
 		this.open = false;
 		this.style.opacity = "0";
-		this.dispatchEvent(new Event("close"));
+		this.dispatchEvent(new CustomEvent("close", {}));
 	}
 
 	///////////////////////////////////////////////// Private Methods /////////////////////////////////////////////////
@@ -164,16 +217,16 @@ export default class Dialog extends HTMLElement {
 		Object.assign(this.style, {
 			"opacity": "0",
 			"transition": "opacity ease 300ms",
-			"position": "absolute",
+			"position": "fixed",
 			"top": "50%",
 			"left": "50%",
 			"transform": "translate(-50%, -50%)",
-			"width": "auto",
-			"height": "auto",
+			// "width": "auto",
+			// "height": "auto",
 			"display": "grid",
 			"grid-template-rows": "2rem auto 2rem",
 			"grid-template-areas": '"h" "c" "f"',
-			"background-color": "white",
+			"background": "white",
 			"padding": "0.5rem",
 			"box-shadow": "3px 3px 6px #444"
 		});
@@ -186,7 +239,8 @@ export default class Dialog extends HTMLElement {
 			"height": "2rem",
 			"text-align": "center",
 			"line-height": "2rem",
-			"font-size": "1.25rem"
+			"font-size": "1.25rem",
+			"white-space": "nowrap"
 		});
 		this._dom.header.classList.add("title");
 
@@ -208,7 +262,8 @@ export default class Dialog extends HTMLElement {
 			"grid-area": "f",
 			"display": "flex",
 			"justify-content": "flex-end",
-			"align-items": "center"
+			"align-items": "center",
+			"gap": "0.25em"
 		});
 		this._dom.footer.classList.add("footer");
 		this._dom.footer.append(this._dom.btnOk, this._dom.btnCancel);
@@ -221,8 +276,18 @@ export default class Dialog extends HTMLElement {
 	_getBlockLayer() {
 		if (!this._blockLayer) {
 			this._blockLayer = document.createElement("div");
+			this._blockLayer.addEventListener("click", e => {
+				if (this.blocklayerCloses && e.target === this._blockLayer) {
+					this.cancel();
+				}
+			});
+
+			// Disable scrolling of elements behind blocklayer
+			this._blockLayer.addEventListener("touchmove", e => { e.preventDefault(); });
+			this._blockLayer.addEventListener("mousewheel", e => { e.preventDefault(); });
+
 			Object.assign(this._blockLayer.style, {
-				position: "absolute",
+				position: "fixed",
 				top: 0, left: 0, bottom: 0, right: 0,
 				"background-color": "rgba(66, 66, 66, 0.8)",
 				"z-index": Dialog._idCounter

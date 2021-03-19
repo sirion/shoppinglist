@@ -36,6 +36,7 @@
 		"semi": "error",
 		"space-infix-ops": "error",
 
+		"array-bracket-spacing": ["warn", "always", { "objectsInArrays": false }],
 		"brace-style": ["warn", "1tbs", { "allowSingleLine": true }],
 		"consistent-return": "warn",
 		"eqeqeq": "warn",

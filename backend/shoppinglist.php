@@ -109,6 +109,11 @@ class Shoppinglist {
 	private function loadList() {
 		try {
 			$this->list = json_decode(file_get_contents($this->listFile), true);
+
+			if (!empty($this->list["main"])) {
+				$this->list = $this->list["main"];
+			}
+
 			if (!isset($this->list)) {
 				$this->list = [];
 			}

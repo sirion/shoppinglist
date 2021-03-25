@@ -126,8 +126,8 @@ export default class UI extends EventTarget {
 
 		this._active = [];
 		this._inactive = [];
-		this._categories = [];
-		this._units = [];
+		this._savedCategories = [];
+		this._savedUnits = [];
 		this._lists = [];
 
 		this.categoryColors = {};

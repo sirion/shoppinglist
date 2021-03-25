@@ -147,7 +147,7 @@ export default class Dialogs {
 				return {
 					value: c.name,
 					textContent: c.name,
-					selected: entry.category === c
+					selected: entry.category === c.name
 				};
 			}))
 		});
@@ -186,7 +186,7 @@ export default class Dialogs {
 				return {
 					value: u.name,
 					textContent: u.name,
-					selected: entry.unit === u
+					selected: entry.unit === u.name
 				};
 			}))
 		});

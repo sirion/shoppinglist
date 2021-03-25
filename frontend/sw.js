@@ -1,4 +1,4 @@
-const cacheName = "v0.2";
+const cacheName = "v0.2.1";
 
 const cacheURIs = [
 	"/index.html",
